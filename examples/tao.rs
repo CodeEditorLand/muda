@@ -26,18 +26,18 @@ fn main() {
 
 	let menu_bar = Menu::new();
 
-	#[cfg(target_os = "windows")]
-	{
-		let menu_bar = menu_bar.clone();
-		event_loop_builder.with_msg_hook(move |msg| {
-			use windows_sys::Win32::UI::WindowsAndMessaging::{TranslateAcceleratorW, MSG};
-			unsafe {
-				let msg = msg as *const MSG;
-				let translated = TranslateAcceleratorW((*msg).hwnd, menu_bar.haccel(), msg);
-				translated == 1
-			}
-		});
-	}
+    #[cfg(target_os = "windows")]
+    {
+        let menu_bar = menu_bar.clone();
+        event_loop_builder.with_msg_hook(move |msg| {
+            use windows_sys::Win32::UI::WindowsAndMessaging::{TranslateAcceleratorW, MSG};
+            unsafe {
+                let msg = msg as *const MSG;
+                let translated = TranslateAcceleratorW((*msg).hwnd, menu_bar.haccel() as _, msg);
+                translated == 1
+            }
+        });
+    }
 
 	let event_loop = event_loop_builder.build();
 
