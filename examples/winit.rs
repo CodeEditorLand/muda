@@ -181,21 +181,21 @@ fn main() {
 }
 
 fn show_context_menu(window: &Window, menu: &dyn ContextMenu, position: Option<Position>) {
-	println!("Show context menu at position {position:?}");
-	#[cfg(target_os = "windows")]
-	{
-		use winit::raw_window_handle::*;
-		if let RawWindowHandle::Win32(handle) = window.window_handle().unwrap().as_raw() {
-			menu.show_context_menu_for_hwnd(handle.hwnd.get(), position);
-		}
-	}
-	#[cfg(target_os = "macos")]
-	{
-		use winit::raw_window_handle::*;
-		if let RawWindowHandle::AppKit(handle) = window.window_handle().unwrap().as_raw() {
-			menu.show_context_menu_for_nsview(handle.ns_view.as_ptr() as _, position);
-		}
-	}
+    println!("Show context menu at position {position:?}");
+    #[cfg(target_os = "windows")]
+    {
+        use winit::raw_window_handle::*;
+        if let RawWindowHandle::Win32(handle) = window.window_handle().unwrap().as_raw() {
+            menu.show_context_menu_for_hwnd(handle.hwnd.get(), position);
+        }
+    }
+    #[cfg(target_os = "macos")]
+    {
+        use winit::raw_window_handle::*;
+        if let RawWindowHandle::AppKit(handle) = window.window_handle().unwrap().as_raw() {
+            unsafe { menu.show_context_menu_for_nsview(handle.ns_view.as_ptr() as _, position) };
+        }
+    }
 }
 
 fn load_icon(path: &std::path::Path) -> muda::Icon {

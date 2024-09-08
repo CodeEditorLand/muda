@@ -201,13 +201,15 @@ fn main() {
 }
 
 fn show_context_menu(window: &Window, menu: &dyn ContextMenu, position: Option<Position>) {
-	println!("Show context menu at position {position:?}");
-	#[cfg(target_os = "windows")]
-	menu.show_context_menu_for_hwnd(window.hwnd() as _, position);
-	#[cfg(target_os = "linux")]
-	menu.show_context_menu_for_gtk_window(window.gtk_window().as_ref(), position);
-	#[cfg(target_os = "macos")]
-	menu.show_context_menu_for_nsview(window.ns_view() as _, position);
+    println!("Show context menu at position {position:?}");
+    #[cfg(target_os = "windows")]
+    menu.show_context_menu_for_hwnd(window.hwnd() as _, position);
+    #[cfg(target_os = "linux")]
+    menu.show_context_menu_for_gtk_window(window.gtk_window().as_ref(), position);
+    #[cfg(target_os = "macos")]
+    unsafe {
+        menu.show_context_menu_for_nsview(window.ns_view() as _, position);
+    }
 }
 
 fn load_icon(path: &std::path::Path) -> muda::Icon {
