@@ -6,31 +6,25 @@ Menu Utilities library for Desktop Applications.
 
 ## Platforms supported:
 
--   Windows
--   macOS
--   Linux (gtk Only)
+- Windows
+- macOS
+- Linux (gtk Only)
 
 ## Platform-specific notes:
 
--   On Windows, accelerators don't work unless the win32 message loop calls
-    [`TranslateAcceleratorW`](https://docs.rs/windows-sys/latest/windows_sys/Win32/UI/WindowsAndMessaging/fn.TranslateAcceleratorW.html).
-    See
-    [`Menu::init_for_hwnd`](https://docs.rs/muda/latest/x86_64-pc-windows-msvc/muda/struct.Menu.html#method.init_for_hwnd)
-    for more details
+- On Windows, accelerators don't work unless the win32 message loop calls
+  [`TranslateAcceleratorW`](https://docs.rs/windows-sys/latest/windows_sys/Win32/UI/WindowsAndMessaging/fn.TranslateAcceleratorW.html).
+  See [`Menu::init_for_hwnd`](https://docs.rs/muda/latest/x86_64-pc-windows-msvc/muda/struct.Menu.html#method.init_for_hwnd) for more details
 
 ### Cargo Features
 
--   `common-controls-v6`: Use `TaskDialogIndirect` API from `ComCtl32.dll` v6 on
-    Windows for showing the predefined `About` menu item dialog.
--   `libxdo`: Enables linking to `libxdo` on Linux which is used for the
-    predfined `Copy`, `Cut`, `Paste` and `SelectAll` menu item.
--   `serde`: Enables de/serializing the dpi types.
+- `common-controls-v6`: Use `TaskDialogIndirect` API from `ComCtl32.dll` v6 on Windows for showing the predefined `About` menu item dialog.
+- `libxdo`: Enables linking to `libxdo` on Linux which is used for the predfined `Copy`, `Cut`, `Paste` and `SelectAll` menu item.
+- `serde`: Enables de/serializing the dpi types.
 
 ## Dependencies (Linux Only)
 
-`gtk` is used for menus and `libxdo` is used to make the predfined `Copy`,
-`Cut`, `Paste` and `SelectAll` menu items work. Be sure to install following
-packages before building:
+`gtk` is used for menus and `libxdo` is used to make the predfined `Copy`, `Cut`, `Paste` and `SelectAll` menu items work. Be sure to install following packages before building:
 
 #### Arch Linux / Manjaro:
 
@@ -66,8 +60,8 @@ let submenu = Submenu::with_items("Submenu Outer", true,&[
 
 ```
 
-Then add your root menu to a Window on Windows and Linux or use it as your
-global app menu on macOS
+Then add your root menu to a Window on Windows and Linux
+or use it as your global app menu on macOS
 
 ```rs
 // --snip--
