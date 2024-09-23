@@ -10,22 +10,22 @@ pub use crate::accelerator::AcceleratorParseError;
 #[non_exhaustive]
 #[derive(Error, Debug)]
 pub enum Error {
-	#[error("This menu item is not a child of this `Menu` or `Submenu`")]
-	NotAChildOfThisMenu,
-	#[cfg(windows)]
-	#[error("This menu has not been initialized for this hwnd`")]
-	NotInitialized,
-	#[cfg(target_os = "linux")]
-	#[error("This menu has not been initialized for this gtk window`")]
-	NotInitialized,
-	#[cfg(windows)]
-	#[error("This menu has already been initialized for this hwnd`")]
-	AlreadyInitialized,
-	#[cfg(target_os = "linux")]
-	#[error("This menu has already been initialized for this gtk window`")]
-	AlreadyInitialized,
-	#[error(transparent)]
-	AcceleratorParseError(#[from] AcceleratorParseError),
+    #[error("This menu item is not a child of this `Menu` or `Submenu`")]
+    NotAChildOfThisMenu,
+    #[cfg(windows)]
+    #[error("This menu has not been initialized for this hwnd`")]
+    NotInitialized,
+    #[cfg(target_os = "linux")]
+    #[error("This menu has not been initialized for this gtk window`")]
+    NotInitialized,
+    #[cfg(windows)]
+    #[error("This menu has already been initialized for this hwnd`")]
+    AlreadyInitialized,
+    #[cfg(target_os = "linux")]
+    #[error("This menu has already been initialized for this gtk window`")]
+    AlreadyInitialized,
+    #[error(transparent)]
+    AcceleratorParseError(#[from] AcceleratorParseError),
 }
 
 /// Convenient type alias of Result type for muda.
