@@ -4,13 +4,7 @@
 
 use std::{cell::RefCell, mem, rc::Rc};
 
-use crate::{
-	accelerator::Accelerator,
-	sealed::IsMenuItemBase,
-	IsMenuItem,
-	MenuId,
-	MenuItemKind,
-};
+use crate::{accelerator::Accelerator, sealed::IsMenuItemBase, IsMenuItem, MenuId, MenuItemKind};
 
 /// A check menu item inside a [`Menu`] or [`Submenu`]
 /// and usually contains a text and a check mark or a similar toggle
@@ -52,10 +46,7 @@ impl CheckMenuItem {
 			accelerator,
 			None,
 		);
-		Self {
-			id:Rc::new(item.id().clone()),
-			inner:Rc::new(RefCell::new(item)),
-		}
+		Self { id:Rc::new(item.id().clone()), inner:Rc::new(RefCell::new(item)) }
 	}
 
 	/// Create a new check menu item with the specified id.
@@ -73,15 +64,13 @@ impl CheckMenuItem {
 		let id = id.into();
 		Self {
 			id:Rc::new(id.clone()),
-			inner:Rc::new(RefCell::new(
-				crate::platform_impl::MenuChild::new_check(
-					text.as_ref(),
-					enabled,
-					checked,
-					accelerator,
-					Some(id),
-				),
-			)),
+			inner:Rc::new(RefCell::new(crate::platform_impl::MenuChild::new_check(
+				text.as_ref(),
+				enabled,
+				checked,
+				accelerator,
+				Some(id),
+			))),
 		}
 	}
 
@@ -95,23 +84,16 @@ impl CheckMenuItem {
 	/// an `&` before a character to assign this character as the mnemonic
 	/// for this check menu item. To display a `&` without assigning a
 	/// mnemenonic, use `&&`.
-	pub fn set_text<S:AsRef<str>>(&self, text:S) {
-		self.inner.borrow_mut().set_text(text.as_ref())
-	}
+	pub fn set_text<S:AsRef<str>>(&self, text:S) { self.inner.borrow_mut().set_text(text.as_ref()) }
 
 	/// Get whether this check menu item is enabled or not.
 	pub fn is_enabled(&self) -> bool { self.inner.borrow().is_enabled() }
 
 	/// Enable or disable this check menu item.
-	pub fn set_enabled(&self, enabled:bool) {
-		self.inner.borrow_mut().set_enabled(enabled)
-	}
+	pub fn set_enabled(&self, enabled:bool) { self.inner.borrow_mut().set_enabled(enabled) }
 
 	/// Set this check menu item accelerator.
-	pub fn set_accelerator(
-		&self,
-		accelerator:Option<Accelerator>,
-	) -> crate::Result<()> {
+	pub fn set_accelerator(&self, accelerator:Option<Accelerator>) -> crate::Result<()> {
 		self.inner.borrow_mut().set_accelerator(accelerator)
 	}
 
@@ -119,9 +101,7 @@ impl CheckMenuItem {
 	pub fn is_checked(&self) -> bool { self.inner.borrow().is_checked() }
 
 	/// Check or Uncheck this check menu item.
-	pub fn set_checked(&self, checked:bool) {
-		self.inner.borrow_mut().set_checked(checked)
-	}
+	pub fn set_checked(&self, checked:bool) { self.inner.borrow_mut().set_checked(checked) }
 
 	/// Convert this menu item into its menu ID.
 	pub fn into_id(mut self) -> MenuId {

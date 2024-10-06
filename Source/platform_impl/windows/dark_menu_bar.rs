@@ -98,8 +98,7 @@ fn selected_background_brush() -> HBRUSH {
 	static mut SELECTED_BACKGROUND_BRUSH:Option<HBrush> = None;
 	unsafe {
 		if SELECTED_BACKGROUND_BRUSH.is_none() {
-			SELECTED_BACKGROUND_BRUSH =
-				Some(HBrush(CreateSolidBrush(SELECTED_BACKGROUND_COLOR)));
+			SELECTED_BACKGROUND_BRUSH = Some(HBrush(CreateSolidBrush(SELECTED_BACKGROUND_COLOR)));
 		}
 		SELECTED_BACKGROUND_BRUSH.as_ref().unwrap().0
 	}
@@ -131,9 +130,7 @@ pub fn draw(hwnd:super::Hwnd, msg:u32, _wparam:WPARAM, lparam:LPARAM) {
 			let mut window_rc:RECT = unsafe { std::mem::zeroed() };
 			unsafe { GetWindowRect(hwnd as _, &mut window_rc) };
 
-			unsafe {
-				OffsetRect(&mut client_rc, -window_rc.left, -window_rc.top)
-			};
+			unsafe { OffsetRect(&mut client_rc, -window_rc.left, -window_rc.top) };
 
 			let mut annoying_rc = client_rc;
 			annoying_rc.bottom = annoying_rc.top;
@@ -262,18 +259,35 @@ pub fn draw(hwnd:super::Hwnd, msg:u32, _wparam:WPARAM, lparam:LPARAM) {
 }
 
 pub fn should_use_dark_mode(hwnd:super::Hwnd) -> bool {
-	should_apps_use_dark_mode()
-		&& !is_high_contrast()
-		&& is_dark_mode_allowed_for_window(hwnd as _)
+	should_apps_use_dark_mode() && !is_high_contrast() && is_dark_mode_allowed_for_window(hwnd as _)
 }
 
-static HUXTHEME:Lazy<isize> =
-	Lazy::new(|| unsafe { LoadLibraryA(s!("uxtheme.dll")) as _ });
+static HUXTHEME:Lazy<isize> = Lazy::new(|| unsafe { LoadLibraryA(s!("uxtheme.dll")) as _ });
 
 fn should_apps_use_dark_mode() -> bool {
 	const UXTHEME_SHOULDAPPSUSEDARKMODE_ORDINAL:u16 = 132;
 	type ShouldAppsUseDarkMode = unsafe extern "system" fn() -> bool;
-	static SHOULD_APPS_USE_DARK_MODE:Lazy<Option<ShouldAppsUseDarkMode>> =
+	static SHOULD_APPS_USE_DARK_MODE:Lazy<Option<ShouldAppsUseDarkMode>> = Lazy::new(|| unsafe {
+		if *HUXTHEME == 0 {
+			return None;
+		}
+
+		GetProcAddress(
+			(*HUXTHEME) as *mut _,
+			UXTHEME_SHOULDAPPSUSEDARKMODE_ORDINAL as usize as *mut _,
+		)
+		.map(|handle| std::mem::transmute(handle))
+	});
+
+	SHOULD_APPS_USE_DARK_MODE
+		.map(|should_apps_use_dark_mode| unsafe { (should_apps_use_dark_mode)() })
+		.unwrap_or(false)
+}
+
+fn is_dark_mode_allowed_for_window(hwnd:HWND) -> bool {
+	const UXTHEME_ISDARKMODEALLOWEDFORWINDOW_ORDINAL:u16 = 137;
+	type IsDarkModeAllowedForWindow = unsafe extern "system" fn(HWND) -> bool;
+	static IS_DARK_MODE_ALLOWED_FOR_WINDOW:Lazy<Option<IsDarkModeAllowedForWindow>> =
 		Lazy::new(|| unsafe {
 			if *HUXTHEME == 0 {
 				return None;
@@ -281,38 +295,12 @@ fn should_apps_use_dark_mode() -> bool {
 
 			GetProcAddress(
 				(*HUXTHEME) as *mut _,
-				UXTHEME_SHOULDAPPSUSEDARKMODE_ORDINAL as usize as *mut _,
+				UXTHEME_ISDARKMODEALLOWEDFORWINDOW_ORDINAL as usize as *mut _,
 			)
 			.map(|handle| std::mem::transmute(handle))
 		});
 
-	SHOULD_APPS_USE_DARK_MODE
-		.map(|should_apps_use_dark_mode| unsafe {
-			(should_apps_use_dark_mode)()
-		})
-		.unwrap_or(false)
-}
-
-fn is_dark_mode_allowed_for_window(hwnd:HWND) -> bool {
-	const UXTHEME_ISDARKMODEALLOWEDFORWINDOW_ORDINAL:u16 = 137;
-	type IsDarkModeAllowedForWindow = unsafe extern "system" fn(HWND) -> bool;
-	static IS_DARK_MODE_ALLOWED_FOR_WINDOW:Lazy<
-		Option<IsDarkModeAllowedForWindow>,
-	> = Lazy::new(|| unsafe {
-		if *HUXTHEME == 0 {
-			return None;
-		}
-
-		GetProcAddress(
-			(*HUXTHEME) as *mut _,
-			UXTHEME_ISDARKMODEALLOWEDFORWINDOW_ORDINAL as usize as *mut _,
-		)
-		.map(|handle| std::mem::transmute(handle))
-	});
-
-	if let Some(_is_dark_mode_allowed_for_window) =
-		*IS_DARK_MODE_ALLOWED_FOR_WINDOW
-	{
+	if let Some(_is_dark_mode_allowed_for_window) = *IS_DARK_MODE_ALLOWED_FOR_WINDOW {
 		unsafe { _is_dark_mode_allowed_for_window(hwnd) }
 	} else {
 		false

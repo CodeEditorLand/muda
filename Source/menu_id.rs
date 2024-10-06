@@ -21,9 +21,7 @@ impl<T:ToString> From<T> for MenuId {
 impl FromStr for MenuId {
 	type Err = Infallible;
 
-	fn from_str(s:&str) -> std::result::Result<Self, Self::Err> {
-		Ok(Self::new(s))
-	}
+	fn from_str(s:&str) -> std::result::Result<Self, Self::Err> { Ok(Self::new(s)) }
 }
 
 impl PartialEq<&str> for MenuId {

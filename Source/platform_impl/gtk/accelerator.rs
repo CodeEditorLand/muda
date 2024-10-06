@@ -17,11 +17,7 @@ pub fn to_gtk_mnemonic<S:AsRef<str>>(string:S) -> String {
 }
 
 pub fn from_gtk_mnemonic<S:AsRef<str>>(string:S) -> String {
-	string
-		.as_ref()
-		.replace("__", "[~~]")
-		.replace('_', "&")
-		.replace("[~~]", "__")
+	string.as_ref().replace("__", "[~~]").replace('_', "&").replace("[~~]", "__")
 }
 
 pub fn parse_accelerator(
@@ -80,9 +76,7 @@ pub fn parse_accelerator(
 			if let Some(gdk_key) = key_to_raw_key(key) {
 				*gdk_key
 			} else {
-				return Err(AcceleratorParseError::UnsupportedKey(
-					key.to_string(),
-				));
+				return Err(AcceleratorParseError::UnsupportedKey(key.to_string()));
 			}
 		},
 	};
@@ -93,20 +87,10 @@ pub fn parse_accelerator(
 fn modifiers_to_gdk_modifier_type(modifiers:Modifiers) -> gdk::ModifierType {
 	let mut result = gdk::ModifierType::empty();
 
-	result
-		.set(gdk::ModifierType::MOD1_MASK, modifiers.contains(Modifiers::ALT));
-	result.set(
-		gdk::ModifierType::CONTROL_MASK,
-		modifiers.contains(Modifiers::CONTROL),
-	);
-	result.set(
-		gdk::ModifierType::SHIFT_MASK,
-		modifiers.contains(Modifiers::SHIFT),
-	);
-	result.set(
-		gdk::ModifierType::META_MASK,
-		modifiers.contains(Modifiers::SUPER),
-	);
+	result.set(gdk::ModifierType::MOD1_MASK, modifiers.contains(Modifiers::ALT));
+	result.set(gdk::ModifierType::CONTROL_MASK, modifiers.contains(Modifiers::CONTROL));
+	result.set(gdk::ModifierType::SHIFT_MASK, modifiers.contains(Modifiers::SHIFT));
+	result.set(gdk::ModifierType::META_MASK, modifiers.contains(Modifiers::SUPER));
 
 	result
 }

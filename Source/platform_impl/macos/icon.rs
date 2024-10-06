@@ -14,11 +14,7 @@ use crate::icon::{BadIcon, RgbaIcon};
 pub struct PlatformIcon(RgbaIcon);
 
 impl PlatformIcon {
-	pub fn from_rgba(
-		rgba:Vec<u8>,
-		width:u32,
-		height:u32,
-	) -> Result<Self, BadIcon> {
+	pub fn from_rgba(rgba:Vec<u8>, width:u32, height:u32) -> Result<Self, BadIcon> {
 		Ok(PlatformIcon(RgbaIcon::from_rgba(rgba, width, height)?))
 	}
 
@@ -28,11 +24,8 @@ impl PlatformIcon {
 		let mut png = Vec::new();
 
 		{
-			let mut encoder = png::Encoder::new(
-				Cursor::new(&mut png),
-				self.0.width as _,
-				self.0.height as _,
-			);
+			let mut encoder =
+				png::Encoder::new(Cursor::new(&mut png), self.0.width as _, self.0.height as _);
 			encoder.set_color(png::ColorType::Rgba);
 			encoder.set_depth(png::BitDepth::Eight);
 
@@ -50,8 +43,7 @@ impl PlatformIcon {
 		let (icon_width, icon_height) = match fixed_height {
 			Some(fixed_height) => {
 				let icon_height:CGFloat = fixed_height as CGFloat;
-				let icon_width:CGFloat =
-					(width as CGFloat) / (height as CGFloat / icon_height);
+				let icon_width:CGFloat = (width as CGFloat) / (height as CGFloat / icon_height);
 
 				(icon_width, icon_height)
 			},

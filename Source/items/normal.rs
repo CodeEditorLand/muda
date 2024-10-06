@@ -1,12 +1,6 @@
 use std::{cell::RefCell, mem, rc::Rc};
 
-use crate::{
-	accelerator::Accelerator,
-	sealed::IsMenuItemBase,
-	IsMenuItem,
-	MenuId,
-	MenuItemKind,
-};
+use crate::{accelerator::Accelerator, sealed::IsMenuItemBase, IsMenuItem, MenuId, MenuItemKind};
 
 /// A menu item inside a [`Menu`] or [`Submenu`] and contains only text.
 ///
@@ -33,21 +27,9 @@ impl MenuItem {
 	/// - `text` could optionally contain an `&` before a character to assign
 	///   this character as the mnemonic for this menu item. To display a `&`
 	///   without assigning a mnemenonic, use `&&`.
-	pub fn new<S:AsRef<str>>(
-		text:S,
-		enabled:bool,
-		accelerator:Option<Accelerator>,
-	) -> Self {
-		let item = crate::platform_impl::MenuChild::new(
-			text.as_ref(),
-			enabled,
-			accelerator,
-			None,
-		);
-		Self {
-			id:Rc::new(item.id().clone()),
-			inner:Rc::new(RefCell::new(item)),
-		}
+	pub fn new<S:AsRef<str>>(text:S, enabled:bool, accelerator:Option<Accelerator>) -> Self {
+		let item = crate::platform_impl::MenuChild::new(text.as_ref(), enabled, accelerator, None);
+		Self { id:Rc::new(item.id().clone()), inner:Rc::new(RefCell::new(item)) }
 	}
 
 	/// Create a new menu item with the specified id.
@@ -83,23 +65,16 @@ impl MenuItem {
 	/// an `&` before a character to assign this character as the mnemonic
 	/// for this menu item. To display a `&` without assigning a mnemenonic, use
 	/// `&&`.
-	pub fn set_text<S:AsRef<str>>(&self, text:S) {
-		self.inner.borrow_mut().set_text(text.as_ref())
-	}
+	pub fn set_text<S:AsRef<str>>(&self, text:S) { self.inner.borrow_mut().set_text(text.as_ref()) }
 
 	/// Get whether this menu item is enabled or not.
 	pub fn is_enabled(&self) -> bool { self.inner.borrow().is_enabled() }
 
 	/// Enable or disable this menu item.
-	pub fn set_enabled(&self, enabled:bool) {
-		self.inner.borrow_mut().set_enabled(enabled)
-	}
+	pub fn set_enabled(&self, enabled:bool) { self.inner.borrow_mut().set_enabled(enabled) }
 
 	/// Set this menu item accelerator.
-	pub fn set_accelerator(
-		&self,
-		accelerator:Option<Accelerator>,
-	) -> crate::Result<()> {
+	pub fn set_accelerator(&self, accelerator:Option<Accelerator>) -> crate::Result<()> {
 		self.inner.borrow_mut().set_accelerator(accelerator)
 	}
 

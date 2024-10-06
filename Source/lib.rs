@@ -324,11 +324,7 @@ pub trait ContextMenu {
 	///
 	/// The `hwnd` must be a valid window HWND.
 	#[cfg(target_os = "windows")]
-	unsafe fn show_context_menu_for_hwnd(
-		&self,
-		hwnd:isize,
-		position:Option<dpi::Position>,
-	);
+	unsafe fn show_context_menu_for_hwnd(&self, hwnd:isize, position:Option<dpi::Position>);
 
 	/// Attach the menu subclass handler to the given hwnd
 	/// so you can recieve events from that window using [MenuEvent::receiver]
@@ -357,11 +353,7 @@ pub trait ContextMenu {
 	/// - `position` is relative to the window top-left corner, if `None`, the
 	///   cursor position is used.
 	#[cfg(target_os = "linux")]
-	fn show_context_menu_for_gtk_window(
-		&self,
-		w:&gtk::Window,
-		position:Option<dpi::Position>,
-	);
+	fn show_context_menu_for_gtk_window(&self, w:&gtk::Window, position:Option<dpi::Position>);
 
 	/// Get the underlying gtk menu reserved for context menus.
 	///
@@ -404,8 +396,7 @@ pub struct MenuEvent {
 pub type MenuEventReceiver = Receiver<MenuEvent>;
 type MenuEventHandler = Box<dyn Fn(MenuEvent) + Send + Sync + 'static>;
 
-static MENU_CHANNEL:Lazy<(Sender<MenuEvent>, MenuEventReceiver)> =
-	Lazy::new(unbounded);
+static MENU_CHANNEL:Lazy<(Sender<MenuEvent>, MenuEventReceiver)> = Lazy::new(unbounded);
 static MENU_EVENT_HANDLER:OnceCell<Option<MenuEventHandler>> = OnceCell::new();
 
 impl MenuEvent {
@@ -429,9 +420,7 @@ impl MenuEvent {
 	/// Calling this function with a `Some` value,
 	/// will not send new events to the channel associated with
 	/// [`MenuEvent::receiver`]
-	pub fn set_event_handler<F:Fn(MenuEvent) + Send + Sync + 'static>(
-		f:Option<F>,
-	) {
+	pub fn set_event_handler<F:Fn(MenuEvent) + Send + Sync + 'static>(f:Option<F>) {
 		if let Some(f) = f {
 			let _ = MENU_EVENT_HANDLER.set(Some(Box::new(f)));
 		} else {

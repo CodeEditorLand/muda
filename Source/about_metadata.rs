@@ -69,9 +69,7 @@ impl AboutMetadata {
 		Some(format!(
 			"{}{}",
 			(self.version.as_ref())?,
-			(self.short_version.as_ref())
-				.map(|v| format!(" ({v})"))
-				.unwrap_or_default()
+			(self.short_version.as_ref()).map(|v| format!(" ({v})")).unwrap_or_default()
 		))
 	}
 }
@@ -154,10 +152,7 @@ impl AboutMetadataBuilder {
 	/// ## Platform-specific
 	///
 	/// - **Windows / Linux:** Appended to the end of `version` in parentheses.
-	pub fn short_version<S:Into<String>>(
-		mut self,
-		short_version:Option<S>,
-	) -> Self {
+	pub fn short_version<S:Into<String>>(mut self, short_version:Option<S>) -> Self {
 		self.0.short_version = short_version.map(|s| s.into());
 		self
 	}
@@ -213,10 +208,7 @@ impl AboutMetadataBuilder {
 	/// ## Platform-specific
 	///
 	/// - **macOS:** Unsupported.
-	pub fn website_label<S:Into<String>>(
-		mut self,
-		website_label:Option<S>,
-	) -> Self {
+	pub fn website_label<S:Into<String>>(mut self, website_label:Option<S>) -> Self {
 		self.0.website_label = website_label.map(|s| s.into());
 		self
 	}

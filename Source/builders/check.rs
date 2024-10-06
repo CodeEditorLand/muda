@@ -57,20 +57,9 @@ impl CheckMenuItemBuilder {
 	/// Build this check menu item.
 	pub fn build(self) -> CheckMenuItem {
 		if let Some(id) = self.id {
-			CheckMenuItem::with_id(
-				id,
-				self.text,
-				self.enabled,
-				self.checked,
-				self.accelerator,
-			)
+			CheckMenuItem::with_id(id, self.text, self.enabled, self.checked, self.accelerator)
 		} else {
-			CheckMenuItem::new(
-				self.text,
-				self.enabled,
-				self.checked,
-				self.accelerator,
-			)
+			CheckMenuItem::new(self.text, self.enabled, self.checked, self.accelerator)
 		}
 	}
 }

@@ -39,15 +39,8 @@ impl Submenu {
 	///   this character as the mnemonic for this submenu. To display a `&`
 	///   without assigning a mnemenonic, use `&&`.
 	pub fn new<S:AsRef<str>>(text:S, enabled:bool) -> Self {
-		let submenu = crate::platform_impl::MenuChild::new_submenu(
-			text.as_ref(),
-			enabled,
-			None,
-		);
-		Self {
-			id:Rc::new(submenu.id().clone()),
-			inner:Rc::new(RefCell::new(submenu)),
-		}
+		let submenu = crate::platform_impl::MenuChild::new_submenu(text.as_ref(), enabled, None);
+		Self { id:Rc::new(submenu.id().clone()), inner:Rc::new(RefCell::new(submenu)) }
 	}
 
 	/// Create a new submenu with the specified id.
@@ -55,22 +48,16 @@ impl Submenu {
 	/// - `text` could optionally contain an `&` before a character to assign
 	///   this character as the mnemonic for this submenu. To display a `&`
 	///   without assigning a mnemenonic, use `&&`.
-	pub fn with_id<I:Into<MenuId>, S:AsRef<str>>(
-		id:I,
-		text:S,
-		enabled:bool,
-	) -> Self {
+	pub fn with_id<I:Into<MenuId>, S:AsRef<str>>(id:I, text:S, enabled:bool) -> Self {
 		let id = id.into();
 
 		Self {
 			id:Rc::new(id.clone()),
-			inner:Rc::new(RefCell::new(
-				crate::platform_impl::MenuChild::new_submenu(
-					text.as_ref(),
-					enabled,
-					Some(id),
-				),
-			)),
+			inner:Rc::new(RefCell::new(crate::platform_impl::MenuChild::new_submenu(
+				text.as_ref(),
+				enabled,
+				Some(id),
+			))),
 		}
 	}
 
@@ -131,20 +118,12 @@ impl Submenu {
 	}
 
 	/// Insert a menu item at the specified `postion` in the submenu.
-	pub fn insert(
-		&self,
-		item:&dyn IsMenuItem,
-		position:usize,
-	) -> crate::Result<()> {
+	pub fn insert(&self, item:&dyn IsMenuItem, position:usize) -> crate::Result<()> {
 		self.inner.borrow_mut().add_menu_item(item, AddOp::Insert(position))
 	}
 
 	/// Insert menu items at the specified `postion` in the submenu.
-	pub fn insert_items(
-		&self,
-		items:&[&dyn IsMenuItem],
-		position:usize,
-	) -> crate::Result<()> {
+	pub fn insert_items(&self, items:&[&dyn IsMenuItem], position:usize) -> crate::Result<()> {
 		for (i, item) in items.iter().enumerate() {
 			self.insert(*item, position + i)?
 		}
@@ -180,17 +159,13 @@ impl Submenu {
 	/// an `&` before a character to assign this character as the mnemonic
 	/// for this submenu. To display a `&` without assigning a mnemenonic, use
 	/// `&&`.
-	pub fn set_text<S:AsRef<str>>(&self, text:S) {
-		self.inner.borrow_mut().set_text(text.as_ref())
-	}
+	pub fn set_text<S:AsRef<str>>(&self, text:S) { self.inner.borrow_mut().set_text(text.as_ref()) }
 
 	/// Get whether this submenu is enabled or not.
 	pub fn is_enabled(&self) -> bool { self.inner.borrow().is_enabled() }
 
 	/// Enable or disable this submenu.
-	pub fn set_enabled(&self, enabled:bool) {
-		self.inner.borrow_mut().set_enabled(enabled)
-	}
+	pub fn set_enabled(&self, enabled:bool) { self.inner.borrow_mut().set_enabled(enabled) }
 
 	/// Set this submenu as the Window menu for the application on macOS.
 	///
@@ -228,11 +203,7 @@ impl ContextMenu for Submenu {
 	fn hpopupmenu(&self) -> isize { self.inner.borrow().hpopupmenu() }
 
 	#[cfg(target_os = "windows")]
-	unsafe fn show_context_menu_for_hwnd(
-		&self,
-		hwnd:isize,
-		position:Option<Position>,
-	) {
+	unsafe fn show_context_menu_for_hwnd(&self, hwnd:isize, position:Option<Position>) {
 		self.inner.borrow_mut().show_context_menu_for_hwnd(hwnd, position)
 	}
 
@@ -247,18 +218,12 @@ impl ContextMenu for Submenu {
 	}
 
 	#[cfg(target_os = "linux")]
-	fn show_context_menu_for_gtk_window(
-		&self,
-		w:&gtk::Window,
-		position:Option<Position>,
-	) {
+	fn show_context_menu_for_gtk_window(&self, w:&gtk::Window, position:Option<Position>) {
 		self.inner.borrow_mut().show_context_menu_for_gtk_window(w, position)
 	}
 
 	#[cfg(target_os = "linux")]
-	fn gtk_context_menu(&self) -> gtk::Menu {
-		self.inner.borrow_mut().gtk_context_menu()
-	}
+	fn gtk_context_menu(&self) -> gtk::Menu { self.inner.borrow_mut().gtk_context_menu() }
 
 	#[cfg(target_os = "macos")]
 	unsafe fn show_context_menu_for_nsview(

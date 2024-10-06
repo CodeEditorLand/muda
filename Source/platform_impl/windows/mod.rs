@@ -167,18 +167,12 @@ impl Drop for Menu {
 			let _ = unsafe { self.remove_for_hwnd(hwnd) };
 		}
 
-		fn remove_from_children_stores(
-			internal_id:u32,
-			children:&Vec<Rc<RefCell<MenuChild>>>,
-		) {
+		fn remove_from_children_stores(internal_id:u32, children:&Vec<Rc<RefCell<MenuChild>>>) {
 			for child in children {
 				let mut child_ = child.borrow_mut();
 				child_.root_menu_haccel_stores.remove(&internal_id);
 				if child_.item_type == MenuItemType::Submenu {
-					remove_from_children_stores(
-						internal_id,
-						child_.children.as_ref().unwrap(),
-					);
+					remove_from_children_stores(internal_id, child_.children.as_ref().unwrap());
 				}
 			}
 		}
@@ -201,11 +195,7 @@ impl Drop for Menu {
 		unsafe {
 			for hwnd in self.hwnds.keys() {
 				SetMenu(*hwnd as _, std::ptr::null_mut());
-				RemoveWindowSubclass(
-					*hwnd as _,
-					Some(menu_subclass_proc),
-					MENU_SUBCLASS_ID,
-				);
+				RemoveWindowSubclass(*hwnd as _, Some(menu_subclass_proc), MENU_SUBCLASS_ID);
 			}
 			DestroyMenu(self.hmenu);
 			DestroyMenu(self.hpopupmenu);
@@ -221,10 +211,7 @@ impl Menu {
 			internal_id,
 			hmenu:unsafe { CreateMenu() },
 			hpopupmenu:unsafe { CreatePopupMenu() },
-			haccel_store:Rc::new(RefCell::new((
-				std::ptr::null_mut(),
-				HashMap::new(),
-			))),
+			haccel_store:Rc::new(RefCell::new((std::ptr::null_mut(), HashMap::new()))),
 			children:Vec::new(),
 			hwnds:HashMap::new(),
 		}
@@ -232,11 +219,7 @@ impl Menu {
 
 	pub fn id(&self) -> &MenuId { &self.id }
 
-	pub fn add_menu_item(
-		&mut self,
-		item:&dyn IsMenuItem,
-		op:AddOp,
-	) -> crate::Result<()> {
+	pub fn add_menu_item(&mut self, item:&dyn IsMenuItem, op:AddOp) -> crate::Result<()> {
 		let (child, mut flags) = inner_menu_child_and_flags!(item);
 
 		{
@@ -308,18 +291,8 @@ impl Menu {
 				let info = create_icon_item_info(hbitmap);
 
 				unsafe {
-					SetMenuItemInfoW(
-						self.hmenu,
-						child_.internal_id,
-						false.into(),
-						&info,
-					);
-					SetMenuItemInfoW(
-						self.hpopupmenu,
-						child_.internal_id,
-						false.into(),
-						&info,
-					);
+					SetMenuItemInfoW(self.hmenu, child_.internal_id, false.into(), &info);
+					SetMenuItemInfoW(self.hpopupmenu, child_.internal_id, false.into(), &info);
 				};
 			}
 		}
@@ -338,9 +311,7 @@ impl Menu {
 		{
 			match op {
 				AddOp::Append => self.children.push(child),
-				AddOp::Insert(position) => {
-					self.children.insert(position, child)
-				},
+				AddOp::Insert(position) => self.children.insert(position, child),
 			}
 		}
 
@@ -449,11 +420,7 @@ impl Menu {
 
 	pub unsafe fn detach_menu_subclass_from_hwnd(&self, hwnd:isize) {
 		// SAFETY: HWND validity is upheld by caller
-		RemoveWindowSubclass(
-			hwnd as _,
-			Some(menu_subclass_proc),
-			MENU_SUBCLASS_ID,
-		);
+		RemoveWindowSubclass(hwnd as _, Some(menu_subclass_proc), MENU_SUBCLASS_ID);
 	}
 
 	pub unsafe fn hide_for_hwnd(&self, hwnd:isize) -> crate::Result<()> {
@@ -488,22 +455,14 @@ impl Menu {
             .unwrap_or(false)
 	}
 
-	pub unsafe fn show_context_menu_for_hwnd(
-		&mut self,
-		hwnd:isize,
-		position:Option<Position>,
-	) {
+	pub unsafe fn show_context_menu_for_hwnd(&mut self, hwnd:isize, position:Option<Position>) {
 		let rc = show_context_menu(hwnd as _, self.hpopupmenu, position);
 		if let Some(item) = rc.and_then(|rc| self.find_by_id(rc)) {
 			menu_selected(hwnd as _, &mut item.borrow_mut());
 		}
 	}
 
-	pub unsafe fn set_theme_for_hwnd(
-		&self,
-		hwnd:isize,
-		theme:MenuTheme,
-	) -> crate::Result<()> {
+	pub unsafe fn set_theme_for_hwnd(&self, hwnd:isize, theme:MenuTheme) -> crate::Result<()> {
 		if !self.hwnds.contains_key(&hwnd) {
 			return Err(crate::Error::NotInitialized);
 		}
@@ -609,10 +568,7 @@ impl MenuChild {
 		}
 	}
 
-	pub fn new_predefined(
-		item_type:PredefinedMenuItemType,
-		text:Option<String>,
-	) -> Self {
+	pub fn new_predefined(item_type:PredefinedMenuItemType, text:Option<String>) -> Self {
 		let internal_id = COUNTER.next();
 		Self {
 			item_type:MenuItemType::Predefined,
@@ -735,27 +691,12 @@ impl MenuChild {
 				info.fMask = MIIM_STRING;
 				info.dwTypeData = label.as_mut_ptr();
 
-				unsafe {
-					GetMenuItemInfoW(
-						*hmenu,
-						self.internal_id(),
-						false.into(),
-						&mut info,
-					)
-				};
+				unsafe { GetMenuItemInfoW(*hmenu, self.internal_id(), false.into(), &mut info) };
 
 				info.cch += 1;
-				info.dwTypeData =
-					Vec::with_capacity(info.cch as usize).as_mut_ptr();
+				info.dwTypeData = Vec::with_capacity(info.cch as usize).as_mut_ptr();
 
-				unsafe {
-					GetMenuItemInfoW(
-						*hmenu,
-						self.internal_id(),
-						false.into(),
-						&mut info,
-					)
-				};
+				unsafe { GetMenuItemInfoW(*hmenu, self.internal_id(), false.into(), &mut info) };
 
 				let text = decode_wide(info.dwTypeData);
 				text.split('\t').next().unwrap().to_string()
@@ -776,14 +717,7 @@ impl MenuChild {
 			info.fMask = MIIM_STRING;
 			info.dwTypeData = text.as_mut_ptr();
 
-			unsafe {
-				SetMenuItemInfoW(
-					*parent,
-					self.internal_id(),
-					false.into(),
-					&info,
-				)
-			};
+			unsafe { SetMenuItemInfoW(*parent, self.internal_id(), false.into(), &info) };
 		}
 	}
 
@@ -795,14 +729,7 @@ impl MenuChild {
 				info.cbSize = std::mem::size_of::<MENUITEMINFOW>() as _;
 				info.fMask = MIIM_STATE;
 
-				unsafe {
-					GetMenuItemInfoW(
-						*hmenu,
-						self.internal_id(),
-						false.into(),
-						&mut info,
-					)
-				};
+				unsafe { GetMenuItemInfoW(*hmenu, self.internal_id(), false.into(), &mut info) };
 
 				(info.fState & MFS_DISABLED) == 0
 			})
@@ -822,10 +749,7 @@ impl MenuChild {
 		}
 	}
 
-	pub fn set_accelerator(
-		&mut self,
-		accelerator:Option<Accelerator>,
-	) -> crate::Result<()> {
+	pub fn set_accelerator(&mut self, accelerator:Option<Accelerator>) -> crate::Result<()> {
 		self.accelerator = accelerator;
 		self.set_text(&self.text.clone());
 
@@ -852,14 +776,7 @@ impl MenuChild {
 				info.cbSize = std::mem::size_of::<MENUITEMINFOW>() as _;
 				info.fMask = MIIM_STATE;
 
-				unsafe {
-					GetMenuItemInfoW(
-						*hmenu,
-						self.internal_id(),
-						false.into(),
-						&mut info,
-					)
-				};
+				unsafe { GetMenuItemInfoW(*hmenu, self.internal_id(), false.into(), &mut info) };
 
 				(info.fState & MFS_CHECKED) != 0
 			})
@@ -887,19 +804,10 @@ impl MenuChild {
 	pub fn set_icon(&mut self, icon:Option<Icon>) {
 		self.icon.clone_from(&icon);
 
-		let hbitmap = icon
-			.map(|i| unsafe { i.inner.to_hbitmap() })
-			.unwrap_or(std::ptr::null_mut());
+		let hbitmap = icon.map(|i| unsafe { i.inner.to_hbitmap() }).unwrap_or(std::ptr::null_mut());
 		let info = create_icon_item_info(hbitmap);
 		for parent in &self.parents_hemnu {
-			unsafe {
-				SetMenuItemInfoW(
-					*parent,
-					self.internal_id(),
-					false.into(),
-					&info,
-				)
-			};
+			unsafe { SetMenuItemInfoW(*parent, self.internal_id(), false.into(), &info) };
 		}
 	}
 }
@@ -908,11 +816,7 @@ impl MenuChild {
 impl MenuChild {
 	pub fn hpopupmenu(&self) -> isize { self.hpopupmenu as _ }
 
-	pub fn add_menu_item(
-		&mut self,
-		item:&dyn IsMenuItem,
-		op:AddOp,
-	) -> crate::Result<()> {
+	pub fn add_menu_item(&mut self, item:&dyn IsMenuItem, op:AddOp) -> crate::Result<()> {
 		let (child, mut flags) = inner_menu_child_and_flags!(item);
 
 		{
@@ -938,11 +842,7 @@ impl MenuChild {
 
 				for root_menu in self.root_menu_haccel_stores.values() {
 					let mut haccel = root_menu.borrow_mut();
-					AccelAction::add(
-						&mut haccel,
-						child_.internal_id(),
-						accelerator,
-					)?;
+					AccelAction::add(&mut haccel, child_.internal_id(), accelerator)?;
 				}
 			}
 
@@ -986,18 +886,8 @@ impl MenuChild {
 				let info = create_icon_item_info(hbitmap);
 
 				unsafe {
-					SetMenuItemInfoW(
-						self.hmenu,
-						child_.internal_id,
-						false.into(),
-						&info,
-					);
-					SetMenuItemInfoW(
-						self.hpopupmenu,
-						child_.internal_id,
-						false.into(),
-						&info,
-					);
+					SetMenuItemInfoW(self.hmenu, child_.internal_id, false.into(), &info);
+					SetMenuItemInfoW(self.hpopupmenu, child_.internal_id, false.into(), &info);
 				};
 			}
 		}
@@ -1063,11 +953,7 @@ impl MenuChild {
 			.collect()
 	}
 
-	pub unsafe fn show_context_menu_for_hwnd(
-		&mut self,
-		hwnd:isize,
-		position:Option<Position>,
-	) {
+	pub unsafe fn show_context_menu_for_hwnd(&mut self, hwnd:isize, position:Option<Position>) {
 		let rc = show_context_menu(hwnd as _, self.hpopupmenu, position);
 		if let Some(item) = rc.and_then(|rc| self.find_by_id(rc)) {
 			unsafe {
@@ -1088,11 +974,7 @@ impl MenuChild {
 
 	pub unsafe fn detach_menu_subclass_from_hwnd(&self, hwnd:isize) {
 		// SAFETY: HWND validity is upheld by caller
-		RemoveWindowSubclass(
-			hwnd as _,
-			Some(menu_subclass_proc),
-			SUBMENU_SUBCLASS_ID,
-		);
+		RemoveWindowSubclass(hwnd as _, Some(menu_subclass_proc), SUBMENU_SUBCLASS_ID);
 	}
 }
 
@@ -1104,10 +986,7 @@ impl MenuChild {
 	}
 }
 
-fn find_by_id(
-	id:u32,
-	children:&Vec<Rc<RefCell<MenuChild>>>,
-) -> Option<Rc<RefCell<MenuChild>>> {
+fn find_by_id(id:u32, children:&Vec<Rc<RefCell<MenuChild>>>) -> Option<Rc<RefCell<MenuChild>>> {
 	for i in children {
 		let item = i.borrow();
 		if item.internal_id() == id {
@@ -1144,15 +1023,7 @@ unsafe fn show_context_menu(
 			pt
 		};
 		SetForegroundWindow(hwnd);
-		TrackPopupMenu(
-			hmenu,
-			TPM_LEFTALIGN | TPM_RETURNCMD,
-			pt.x,
-			pt.y,
-			0,
-			hwnd,
-			std::ptr::null(),
-		)
+		TrackPopupMenu(hmenu, TPM_LEFTALIGN | TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, std::ptr::null())
 	};
 	(result > 0).then_some(result.try_into().ok()).flatten()
 }
@@ -1180,8 +1051,7 @@ impl AccelAction {
 		unsafe {
 			DestroyAcceleratorTable(haccel_store.0);
 			let len = haccel_store.1.len();
-			let accels =
-				haccel_store.1.values().map(|i| i.0).collect::<Vec<_>>();
+			let accels = haccel_store.1.values().map(|i| i.0).collect::<Vec<_>>();
 			haccel_store.0 = CreateAcceleratorTableW(accels.as_ptr(), len as _);
 		}
 	}
@@ -1251,15 +1121,9 @@ unsafe extern "system" fn menu_subclass_proc(
 			}
 		},
 
-		WM_UAHDRAWMENUITEM | WM_UAHDRAWMENU
-			if uidsubclass == MENU_SUBCLASS_ID =>
-		{
+		WM_UAHDRAWMENUITEM | WM_UAHDRAWMENU if uidsubclass == MENU_SUBCLASS_ID => {
 			let menu = obj_from_dwrefdata::<Menu>(dwrefdata);
-			let theme = menu
-				.hwnds
-				.get(&(hwnd as _))
-				.copied()
-				.unwrap_or(MenuTheme::Auto);
+			let theme = menu.hwnds.get(&(hwnd as _)).copied().unwrap_or(MenuTheme::Auto);
 			if theme.should_use_dark(hwnd as _) {
 				dark_menu_bar::draw(hwnd as _, msg, wparam, lparam);
 				0
@@ -1273,11 +1137,7 @@ unsafe extern "system" fn menu_subclass_proc(
 			let res = DefSubclassProc(hwnd as _, msg, wparam, lparam);
 
 			let menu = obj_from_dwrefdata::<Menu>(dwrefdata);
-			let theme = menu
-				.hwnds
-				.get(&(hwnd as _))
-				.copied()
-				.unwrap_or(MenuTheme::Auto);
+			let theme = menu.hwnds.get(&(hwnd as _)).copied().unwrap_or(MenuTheme::Auto);
 			if theme.should_use_dark(hwnd as _) {
 				dark_menu_bar::draw(hwnd as _, msg, wparam, lparam);
 			}
@@ -1289,10 +1149,7 @@ unsafe extern "system" fn menu_subclass_proc(
 	}
 }
 
-unsafe fn menu_selected(
-	hwnd:windows_sys::Win32::Foundation::HWND,
-	item:&mut MenuChild,
-) {
+unsafe fn menu_selected(hwnd:windows_sys::Win32::Foundation::HWND, item:&mut MenuChild) {
 	let (mut dispatch, mut menu_id) = (true, None);
 
 	{
@@ -1310,15 +1167,9 @@ unsafe fn menu_selected(
 			MenuItemType::Predefined => {
 				if let Some(predefined_item_type) = &item.predefined_item_type {
 					match predefined_item_type {
-						PredefinedMenuItemType::Copy => {
-							execute_edit_command(EditCommand::Copy)
-						},
-						PredefinedMenuItemType::Cut => {
-							execute_edit_command(EditCommand::Cut)
-						},
-						PredefinedMenuItemType::Paste => {
-							execute_edit_command(EditCommand::Paste)
-						},
+						PredefinedMenuItemType::Copy => execute_edit_command(EditCommand::Copy),
+						PredefinedMenuItemType::Cut => execute_edit_command(EditCommand::Cut),
+						PredefinedMenuItemType::Paste => execute_edit_command(EditCommand::Paste),
 						PredefinedMenuItemType::SelectAll => {
 							execute_edit_command(EditCommand::SelectAll)
 						},
@@ -1359,11 +1210,7 @@ impl MenuTheme {
 	fn should_use_dark(&self, hwnd:isize) -> bool {
 		match self {
 			MenuTheme::Dark => true,
-			MenuTheme::Auto
-				if dark_menu_bar::should_use_dark_mode(hwnd as _) =>
-			{
-				true
-			},
+			MenuTheme::Auto if dark_menu_bar::should_use_dark_mode(hwnd as _) => true,
 			_ => false,
 		}
 	}
@@ -1442,23 +1289,12 @@ fn show_about_dialog(hwnd:Hwnd, metadata:&AboutMetadata) {
 	}
 
 	let message = encode_wide(message);
-	let title = encode_wide(format!(
-		"About {}",
-		metadata.name.as_deref().unwrap_or_default()
-	));
+	let title = encode_wide(format!("About {}", metadata.name.as_deref().unwrap_or_default()));
 
 	#[cfg(not(feature = "common-controls-v6"))]
 	std::thread::spawn(move || unsafe {
-		use windows_sys::Win32::UI::WindowsAndMessaging::{
-			MessageBoxW,
-			MB_ICONINFORMATION,
-		};
-		MessageBoxW(
-			hwnd as _,
-			message.as_ptr(),
-			title.as_ptr(),
-			MB_ICONINFORMATION,
-		);
+		use windows_sys::Win32::UI::WindowsAndMessaging::{MessageBoxW, MB_ICONINFORMATION};
+		MessageBoxW(hwnd as _, message.as_ptr(), title.as_ptr(), MB_ICONINFORMATION);
 	});
 
 	#[cfg(feature = "common-controls-v6")]
@@ -1480,12 +1316,8 @@ fn show_about_dialog(hwnd:Hwnd, metadata:&AboutMetadata) {
 				dwFlags:TDF_ALLOW_DIALOG_CANCELLATION,
 				pszWindowTitle:title.as_ptr(),
 				pszContent:message.as_ptr(),
-				Anonymous1:TASKDIALOGCONFIG_0 {
-					pszMainIcon:TD_INFORMATION_ICON,
-				},
-				Anonymous2:TASKDIALOGCONFIG_1 {
-					pszFooterIcon:std::ptr::null(),
-				},
+				Anonymous1:TASKDIALOGCONFIG_0 { pszMainIcon:TD_INFORMATION_ICON },
+				Anonymous2:TASKDIALOGCONFIG_1 { pszFooterIcon:std::ptr::null() },
 				dwCommonButtons:TDCBF_OK_BUTTON,
 				pButtons:std::ptr::null(),
 				cButtons:0,

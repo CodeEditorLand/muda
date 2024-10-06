@@ -102,8 +102,8 @@ impl Drop for Menu {
 
 impl Menu {
 	pub fn new(id:Option<MenuId>) -> Self {
-		let mtm = MainThreadMarker::new()
-			.expect("`muda::Menu` can only be created on the main thread");
+		let mtm =
+			MainThreadMarker::new().expect("`muda::Menu` can only be created on the main thread");
 		let ns_menu = NSMenu::new(mtm);
 		unsafe { ns_menu.setAutoenablesItems(false) };
 		Self {
@@ -115,11 +115,7 @@ impl Menu {
 
 	pub fn id(&self) -> &MenuId { &self.id }
 
-	pub fn add_menu_item(
-		&mut self,
-		item:&dyn crate::IsMenuItem,
-		op:AddOp,
-	) -> crate::Result<()> {
+	pub fn add_menu_item(&mut self, item:&dyn crate::IsMenuItem, op:AddOp) -> crate::Result<()> {
 		let ns_menu_item = item.make_ns_item_for_menu(self.ns_menu.0)?;
 		let child = item.child();
 
@@ -130,10 +126,7 @@ impl Menu {
 					self.children.push(child);
 				},
 				AddOp::Insert(position) => {
-					self.ns_menu.1.insertItem_atIndex(
-						&ns_menu_item,
-						position as NSInteger,
-					);
+					self.ns_menu.1.insertItem_atIndex(&ns_menu_item, position as NSInteger);
 					self.children.insert(position, child);
 				},
 			}
@@ -161,11 +154,7 @@ impl Menu {
 			if let Some(menus) = menus {
 				for menu in menus {
 					for item in child_.items() {
-						child_.remove_inner(
-							item.as_ref(),
-							false,
-							Some(menu.0),
-						)?;
+						child_.remove_inner(item.as_ref(), false, Some(menu.0))?;
 					}
 				}
 			}
@@ -173,9 +162,7 @@ impl Menu {
 		}
 
 		// remove each NSMenuItem from the NSMenu
-		if let Some(ns_menu_items) =
-			child_.ns_menu_items.remove(&self.ns_menu.0)
-		{
+		if let Some(ns_menu_items) = child_.ns_menu_items.remove(&self.ns_menu.0) {
 			for item in ns_menu_items {
 				unsafe { self.ns_menu.1.removeItem(&item) };
 			}
@@ -209,9 +196,7 @@ impl Menu {
 		show_context_menu(&self.ns_menu.1, view, position)
 	}
 
-	pub fn ns_menu(&self) -> *mut std::ffi::c_void {
-		Retained::as_ptr(&self.ns_menu.1) as _
-	}
+	pub fn ns_menu(&self) -> *mut std::ffi::c_void { Retained::as_ptr(&self.ns_menu.1) as _ }
 }
 
 /// A generic child in a menu
@@ -252,14 +237,9 @@ impl Drop for MenuChild {
 				child_.ns_menu_items.remove(&id);
 
 				if child_.item_type == MenuItemType::Submenu {
-					if let Some(menus) =
-						child_.ns_menus.as_mut().unwrap().remove(&id)
-					{
+					if let Some(menus) = child_.ns_menus.as_mut().unwrap().remove(&id) {
 						for menu in menus {
-							drop_children(
-								menu.0,
-								child_.children.as_ref().unwrap(),
-							);
+							drop_children(menu.0, child_.children.as_ref().unwrap());
 						}
 					}
 				}
@@ -309,9 +289,8 @@ impl MenuChild {
 		let mtm = if cfg!(test) {
 			unsafe { MainThreadMarker::new_unchecked() }
 		} else {
-			MainThreadMarker::new().expect(
-				"`muda::MenuChild` can only be created on the main thread",
-			)
+			MainThreadMarker::new()
+				.expect("`muda::MenuChild` can only be created on the main thread")
 		};
 		Self {
 			item_type:MenuItemType::Submenu,
@@ -334,10 +313,7 @@ impl MenuChild {
 		}
 	}
 
-	pub(crate) fn new_predefined(
-		item_type:PredefinedMenuItemType,
-		text:Option<String>,
-	) -> Self {
+	pub(crate) fn new_predefined(item_type:PredefinedMenuItemType, text:Option<String>) -> Self {
 		let text = strip_mnemonic(text.unwrap_or_else(|| {
 			// Gets the app's name from `NSRunningApplication::localizedName`.
 			let app_name = || unsafe {
@@ -349,12 +325,8 @@ impl MenuChild {
 				PredefinedMenuItemType::About(_) => {
 					format!("About {}", app_name()).trim().to_string()
 				},
-				PredefinedMenuItemType::Hide => {
-					format!("Hide {}", app_name()).trim().to_string()
-				},
-				PredefinedMenuItemType::Quit => {
-					format!("Quit {}", app_name()).trim().to_string()
-				},
+				PredefinedMenuItemType::Hide => format!("Hide {}", app_name()).trim().to_string(),
+				PredefinedMenuItemType::Quit => format!("Quit {}", app_name()).trim().to_string(),
 				_ => item_type.text().to_string(),
 			}
 		}));
@@ -484,14 +456,9 @@ impl MenuChild {
 		}
 	}
 
-	pub fn set_accelerator(
-		&mut self,
-		accelerator:Option<Accelerator>,
-	) -> crate::Result<()> {
-		let key_equivalent = (accelerator)
-			.as_ref()
-			.map(|accel| accel.key_equivalent())
-			.transpose()?;
+	pub fn set_accelerator(&mut self, accelerator:Option<Accelerator>) -> crate::Result<()> {
+		let key_equivalent =
+			(accelerator).as_ref().map(|accel| accel.key_equivalent()).transpose()?;
 
 		if let Some(key_equivalent) = key_equivalent {
 			let key_equivalent = NSString::from_str(key_equivalent.as_str());
@@ -523,11 +490,7 @@ impl MenuChild {
 
 	pub fn set_checked(&self, checked:bool) {
 		self.checked.set(checked);
-		let state = if checked {
-			NSControlStateValueOn
-		} else {
-			NSControlStateValueOff
-		};
+		let state = if checked { NSControlStateValueOn } else { NSControlStateValueOff };
 		for ns_items in self.ns_menu_items.values() {
 			for ns_item in ns_items {
 				unsafe {
@@ -563,11 +526,7 @@ impl MenuChild {
 
 /// Submenu methods
 impl MenuChild {
-	pub fn add_menu_item(
-		&mut self,
-		item:&dyn crate::IsMenuItem,
-		op:AddOp,
-	) -> crate::Result<()> {
+	pub fn add_menu_item(&mut self, item:&dyn crate::IsMenuItem, op:AddOp) -> crate::Result<()> {
 		let child = item.child();
 
 		unsafe {
@@ -575,15 +534,13 @@ impl MenuChild {
 				AddOp::Append => {
 					for menus in self.ns_menus.as_ref().unwrap().values() {
 						for ns_menu in menus {
-							let ns_menu_item =
-								item.make_ns_item_for_menu(ns_menu.0)?;
+							let ns_menu_item = item.make_ns_item_for_menu(ns_menu.0)?;
 							ns_menu.1.addItem(&ns_menu_item);
 						}
 					}
 
-					let ns_menu_item = item.make_ns_item_for_menu(
-						self.ns_menu.as_ref().unwrap().0,
-					)?;
+					let ns_menu_item =
+						item.make_ns_item_for_menu(self.ns_menu.as_ref().unwrap().0)?;
 					self.ns_menu.as_ref().unwrap().1.addItem(&ns_menu_item);
 
 					self.children.as_mut().unwrap().push(child);
@@ -591,22 +548,18 @@ impl MenuChild {
 				AddOp::Insert(position) => {
 					for menus in self.ns_menus.as_ref().unwrap().values() {
 						for ns_menu in menus {
-							let ns_menu_item =
-								item.make_ns_item_for_menu(ns_menu.0)?;
-							ns_menu.1.insertItem_atIndex(
-								&ns_menu_item,
-								position as NSInteger,
-							);
+							let ns_menu_item = item.make_ns_item_for_menu(ns_menu.0)?;
+							ns_menu.1.insertItem_atIndex(&ns_menu_item, position as NSInteger);
 						}
 					}
 
-					let ns_menu_item = item.make_ns_item_for_menu(
-						self.ns_menu.as_ref().unwrap().0,
-					)?;
-					self.ns_menu.as_ref().unwrap().1.insertItem_atIndex(
-						&ns_menu_item,
-						position as NSInteger,
-					);
+					let ns_menu_item =
+						item.make_ns_item_for_menu(self.ns_menu.as_ref().unwrap().0)?;
+					self.ns_menu
+						.as_ref()
+						.unwrap()
+						.1
+						.insertItem_atIndex(&ns_menu_item, position as NSInteger);
 
 					self.children.as_mut().unwrap().insert(position, child);
 				},
@@ -655,22 +608,13 @@ impl MenuChild {
 					let mut child_ = child.borrow_mut();
 
 					if child_.item_type == MenuItemType::Submenu {
-						let menus = child_
-							.ns_menus
-							.as_ref()
-							.unwrap()
-							.get(&menu.0)
-							.cloned();
+						let menus = child_.ns_menus.as_ref().unwrap().get(&menu.0).cloned();
 						if let Some(menus) = menus {
 							for menu in menus {
 								// iterate through children and only remove the
 								// ns menu items related to this submenu
 								for item in child_.items() {
-									child_.remove_inner(
-										item.as_ref(),
-										false,
-										Some(menu.0),
-									)?;
+									child_.remove_inner(item.as_ref(), false, Some(menu.0))?;
 								}
 							}
 						}
@@ -687,15 +631,11 @@ impl MenuChild {
 		}
 
 		if remove_from_cache {
-			if let Some(ns_menu_items) = child
-				.borrow_mut()
-				.ns_menu_items
-				.remove(&self.ns_menu.as_ref().unwrap().0)
+			if let Some(ns_menu_items) =
+				child.borrow_mut().ns_menu_items.remove(&self.ns_menu.as_ref().unwrap().0)
 			{
 				for item in ns_menu_items {
-					unsafe {
-						self.ns_menu.as_ref().unwrap().1.removeItem(&item)
-					};
+					unsafe { self.ns_menu.as_ref().unwrap().1.removeItem(&item) };
 				}
 			}
 		}
@@ -745,8 +685,7 @@ impl MenuChild {
 		&mut self,
 		menu_id:u32,
 	) -> crate::Result<Retained<NSMenuItem>> {
-		let mtm = MainThreadMarker::new()
-			.expect("can only create menu item on the main thread");
+		let mtm = MainThreadMarker::new().expect("can only create menu item on the main thread");
 		let ns_menu_item;
 		let ns_submenu;
 
@@ -781,10 +720,7 @@ impl MenuChild {
 			.or_default()
 			.push(NsMenuRef(id, ns_submenu));
 
-		self.ns_menu_items
-			.entry(menu_id)
-			.or_default()
-			.push(ns_menu_item.retain());
+		self.ns_menu_items.entry(menu_id).or_default().push(ns_menu_item.retain());
 
 		Ok(ns_menu_item)
 	}
@@ -793,14 +729,9 @@ impl MenuChild {
 		&mut self,
 		menu_id:u32,
 	) -> crate::Result<Retained<NSMenuItem>> {
-		let mtm = MainThreadMarker::new()
-			.expect("can only create menu item on the main thread");
-		let ns_menu_item = MenuItem::create(
-			mtm,
-			&self.text,
-			Some(sel!(fireMenuItemAction:)),
-			&self.accelerator,
-		)?;
+		let mtm = MainThreadMarker::new().expect("can only create menu item on the main thread");
+		let ns_menu_item =
+			MenuItem::create(mtm, &self.text, Some(sel!(fireMenuItemAction:)), &self.accelerator)?;
 
 		unsafe {
 			ns_menu_item.setTarget(Some(&ns_menu_item));
@@ -824,18 +755,13 @@ impl MenuChild {
 		&mut self,
 		menu_id:u32,
 	) -> crate::Result<Retained<NSMenuItem>> {
-		let mtm = MainThreadMarker::new()
-			.expect("can only create menu item on the main thread");
+		let mtm = MainThreadMarker::new().expect("can only create menu item on the main thread");
 		let item_type = self.predefined_item_type.as_ref().unwrap();
 		let ns_menu_item = match item_type {
 			PredefinedMenuItemType::Separator => NSMenuItem::separatorItem(mtm),
 			_ => {
-				let ns_menu_item = MenuItem::create(
-					mtm,
-					&self.text,
-					item_type.selector(),
-					&self.accelerator,
-				)?;
+				let ns_menu_item =
+					MenuItem::create(mtm, &self.text, item_type.selector(), &self.accelerator)?;
 
 				if let PredefinedMenuItemType::About(_) = item_type {
 					unsafe {
@@ -858,16 +784,12 @@ impl MenuChild {
 				// we have to assign an empty menu as the app's services menu,
 				// and macOS will populate it
 				let services_menu = NSMenu::new(mtm);
-				NSApplication::sharedApplication(mtm)
-					.setServicesMenu(Some(&services_menu));
+				NSApplication::sharedApplication(mtm).setServicesMenu(Some(&services_menu));
 				ns_menu_item.setSubmenu(Some(&services_menu));
 			}
 		}
 
-		self.ns_menu_items
-			.entry(menu_id)
-			.or_default()
-			.push(ns_menu_item.retain());
+		self.ns_menu_items.entry(menu_id).or_default().push(ns_menu_item.retain());
 
 		Ok(ns_menu_item)
 	}
@@ -876,14 +798,9 @@ impl MenuChild {
 		&mut self,
 		menu_id:u32,
 	) -> crate::Result<Retained<NSMenuItem>> {
-		let mtm = MainThreadMarker::new()
-			.expect("can only create menu item on the main thread");
-		let ns_menu_item = MenuItem::create(
-			mtm,
-			&self.text,
-			Some(sel!(fireMenuItemAction:)),
-			&self.accelerator,
-		)?;
+		let mtm = MainThreadMarker::new().expect("can only create menu item on the main thread");
+		let ns_menu_item =
+			MenuItem::create(mtm, &self.text, Some(sel!(fireMenuItemAction:)), &self.accelerator)?;
 
 		unsafe {
 			ns_menu_item.setTarget(Some(&ns_menu_item));
@@ -910,14 +827,9 @@ impl MenuChild {
 		&mut self,
 		menu_id:u32,
 	) -> crate::Result<Retained<NSMenuItem>> {
-		let mtm = MainThreadMarker::new()
-			.expect("can only create menu item on the main thread");
-		let ns_menu_item = MenuItem::create(
-			mtm,
-			&self.text,
-			Some(sel!(fireMenuItemAction:)),
-			&self.accelerator,
-		)?;
+		let mtm = MainThreadMarker::new().expect("can only create menu item on the main thread");
+		let ns_menu_item =
+			MenuItem::create(mtm, &self.text, Some(sel!(fireMenuItemAction:)), &self.accelerator)?;
 
 		unsafe {
 			ns_menu_item.setTarget(Some(&ns_menu_item));
@@ -943,24 +855,13 @@ impl MenuChild {
 		Ok(Retained::into_super(ns_menu_item))
 	}
 
-	fn make_ns_item_for_menu(
-		&mut self,
-		menu_id:u32,
-	) -> crate::Result<Retained<NSMenuItem>> {
+	fn make_ns_item_for_menu(&mut self, menu_id:u32) -> crate::Result<Retained<NSMenuItem>> {
 		match self.item_type {
 			MenuItemType::Submenu => self.create_ns_item_for_submenu(menu_id),
-			MenuItemType::MenuItem => {
-				self.create_ns_item_for_menu_item(menu_id)
-			},
-			MenuItemType::Predefined => {
-				self.create_ns_item_for_predefined_menu_item(menu_id)
-			},
-			MenuItemType::Check => {
-				self.create_ns_item_for_check_menu_item(menu_id)
-			},
-			MenuItemType::Icon => {
-				self.create_ns_item_for_icon_menu_item(menu_id)
-			},
+			MenuItemType::MenuItem => self.create_ns_item_for_menu_item(menu_id),
+			MenuItemType::Predefined => self.create_ns_item_for_predefined_menu_item(menu_id),
+			MenuItemType::Check => self.create_ns_item_for_check_menu_item(menu_id),
+			MenuItemType::Icon => self.create_ns_item_for_icon_menu_item(menu_id),
 		}
 	}
 }
@@ -979,41 +880,26 @@ impl PredefinedMenuItemType {
 			PredefinedMenuItemType::Maximize => Some(sel!(performZoom:)),
 			PredefinedMenuItemType::Fullscreen => Some(sel!(toggleFullScreen:)),
 			PredefinedMenuItemType::Hide => Some(sel!(hide:)),
-			PredefinedMenuItemType::HideOthers => {
-				Some(sel!(hideOtherApplications:))
-			},
-			PredefinedMenuItemType::ShowAll => {
-				Some(sel!(unhideAllApplications:))
-			},
+			PredefinedMenuItemType::HideOthers => Some(sel!(hideOtherApplications:)),
+			PredefinedMenuItemType::ShowAll => Some(sel!(unhideAllApplications:)),
 			PredefinedMenuItemType::CloseWindow => Some(sel!(performClose:)),
 			PredefinedMenuItemType::Quit => Some(sel!(terminate:)),
 			// manual implementation in `fire_menu_item_click`
 			PredefinedMenuItemType::About(_) => Some(sel!(fireMenuItemAction:)),
 			PredefinedMenuItemType::Services => None,
-			PredefinedMenuItemType::BringAllToFront => {
-				Some(sel!(arrangeInFront:))
-			},
+			PredefinedMenuItemType::BringAllToFront => Some(sel!(arrangeInFront:)),
 			PredefinedMenuItemType::None => None,
 		}
 	}
 }
 
 impl dyn IsMenuItem + '_ {
-	fn make_ns_item_for_menu(
-		&self,
-		menu_id:u32,
-	) -> crate::Result<Retained<NSMenuItem>> {
+	fn make_ns_item_for_menu(&self, menu_id:u32) -> crate::Result<Retained<NSMenuItem>> {
 		match self.kind() {
-			MenuItemKind::Submenu(i) => {
-				i.inner.borrow_mut().create_ns_item_for_submenu(menu_id)
-			},
-			MenuItemKind::MenuItem(i) => {
-				i.inner.borrow_mut().create_ns_item_for_menu_item(menu_id)
-			},
+			MenuItemKind::Submenu(i) => i.inner.borrow_mut().create_ns_item_for_submenu(menu_id),
+			MenuItemKind::MenuItem(i) => i.inner.borrow_mut().create_ns_item_for_menu_item(menu_id),
 			MenuItemKind::Predefined(i) => {
-				i.inner
-					.borrow_mut()
-					.create_ns_item_for_predefined_menu_item(menu_id)
+				i.inner.borrow_mut().create_ns_item_for_predefined_menu_item(menu_id)
 			},
 			MenuItemKind::Check(i) => {
 				i.inner.borrow_mut().create_ns_item_for_check_menu_item(menu_id)
@@ -1064,66 +950,55 @@ impl MenuItem {
 		let mtm = MainThreadMarker::from(self);
 		// Create a reference to the `MenuChild` from the raw pointer
 		// stored as an instance variable on the native menu item
-		let item = unsafe { self.ivars().get().as_ref() }
-			.expect("MenuItem's MenuChild pointer was unset");
+		let item =
+			unsafe { self.ivars().get().as_ref() }.expect("MenuItem's MenuChild pointer was unset");
 
-		if let Some(PredefinedMenuItemType::About(about_meta)) =
-			&item.predefined_item_type
-		{
+		if let Some(PredefinedMenuItemType::About(about_meta)) = &item.predefined_item_type {
 			match about_meta {
 				Some(about_meta) => {
 					let mut keys:Vec<&NSString> = Default::default();
-					let mut objects:Vec<Retained<AnyObject>> =
-						Default::default();
+					let mut objects:Vec<Retained<AnyObject>> = Default::default();
 
 					if let Some(name) = &about_meta.name {
 						keys.push(unsafe { NSAboutPanelOptionApplicationName });
-						objects.push(Retained::into_super(
-							Retained::into_super(NSString::from_str(name)),
-						));
+						objects.push(Retained::into_super(Retained::into_super(
+							NSString::from_str(name),
+						)));
 					}
 
 					if let Some(version) = &about_meta.version {
-						keys.push(unsafe {
-							NSAboutPanelOptionApplicationVersion
-						});
-						objects.push(Retained::into_super(
-							Retained::into_super(NSString::from_str(version)),
-						));
+						keys.push(unsafe { NSAboutPanelOptionApplicationVersion });
+						objects.push(Retained::into_super(Retained::into_super(
+							NSString::from_str(version),
+						)));
 					}
 
 					if let Some(short_version) = &about_meta.short_version {
 						keys.push(unsafe { NSAboutPanelOptionVersion });
-						objects.push(Retained::into_super(
-							Retained::into_super(NSString::from_str(
-								short_version,
-							)),
-						));
+						objects.push(Retained::into_super(Retained::into_super(
+							NSString::from_str(short_version),
+						)));
 					}
 
 					if let Some(copyright) = &about_meta.copyright {
 						keys.push(ns_string!(NSAboutPanelOptionCopyright));
-						objects.push(Retained::into_super(
-							Retained::into_super(NSString::from_str(copyright)),
-						));
+						objects.push(Retained::into_super(Retained::into_super(
+							NSString::from_str(copyright),
+						)));
 					}
 
 					if let Some(icon) = &about_meta.icon {
 						keys.push(unsafe { NSAboutPanelOptionApplicationIcon });
-						objects.push(Retained::into_super(
-							Retained::into_super(icon.inner.to_nsimage(None)),
-						));
+						objects.push(Retained::into_super(Retained::into_super(
+							icon.inner.to_nsimage(None),
+						)));
 					}
 
 					if let Some(credits) = &about_meta.credits {
 						keys.push(unsafe { NSAboutPanelOptionCredits });
-						objects.push(Retained::into_super(
-							Retained::into_super(
-								NSAttributedString::from_nsstring(
-									&NSString::from_str(credits),
-								),
-							),
-						));
+						objects.push(Retained::into_super(Retained::into_super(
+							NSAttributedString::from_nsstring(&NSString::from_str(credits)),
+						)));
 					}
 
 					let dict = NSDictionary::from_vec(&keys, objects);
@@ -1205,19 +1080,13 @@ fn menuitem_set_native_icon(menuitem:&NSMenuItem, icon:Option<NativeIcon>) {
 	}
 }
 
-unsafe fn show_context_menu(
-	ns_menu:&NSMenu,
-	view:*const c_void,
-	position:Option<Position>,
-) {
+unsafe fn show_context_menu(ns_menu:&NSMenu, view:*const c_void, position:Option<Position>) {
 	// SAFETY: Caller verifies that the view is valid.
 	let view:&NSView = unsafe { &*view.cast() };
 
 	let window = view.window().expect("view must be installed in a window");
 	let scale_factor = window.backingScaleFactor();
-	let (location, in_view) = if let Some(pos) =
-		position.map(|p| p.to_logical(scale_factor))
-	{
+	let (location, in_view) = if let Some(pos) = position.map(|p| p.to_logical(scale_factor)) {
 		let view_rect = view.frame();
 		let location = NSPoint::new(pos.x, view_rect.size.height - pos.y);
 		(location, Some(view))
@@ -1228,10 +1097,7 @@ unsafe fn show_context_menu(
 		(location, None)
 	};
 
-	let _ = unsafe {
-		ns_menu
-			.popUpMenuPositioningItem_atLocation_inView(None, location, in_view)
-	};
+	let _ = unsafe { ns_menu.popUpMenuPositioningItem_atLocation_inView(None, location, in_view) };
 }
 
 impl NativeIcon {
@@ -1240,12 +1106,8 @@ impl NativeIcon {
 		match self {
 			NativeIcon::Add => appkit::NSImageNameAddTemplate,
 			NativeIcon::StatusAvailable => appkit::NSImageNameStatusAvailable,
-			NativeIcon::StatusUnavailable => {
-				appkit::NSImageNameStatusUnavailable
-			},
-			NativeIcon::StatusPartiallyAvailable => {
-				appkit::NSImageNameStatusPartiallyAvailable
-			},
+			NativeIcon::StatusUnavailable => appkit::NSImageNameStatusUnavailable,
+			NativeIcon::StatusPartiallyAvailable => appkit::NSImageNameStatusPartiallyAvailable,
 			NativeIcon::Advanced => appkit::NSImageNameAdvanced,
 			NativeIcon::Bluetooth => appkit::NSImageNameBluetoothTemplate,
 			NativeIcon::Bookmarks => appkit::NSImageNameBookmarksTemplate,
@@ -1253,20 +1115,14 @@ impl NativeIcon {
 			NativeIcon::ColorPanel => appkit::NSImageNameColorPanel,
 			NativeIcon::ColumnView => appkit::NSImageNameColumnViewTemplate,
 			NativeIcon::Computer => appkit::NSImageNameComputer,
-			NativeIcon::EnterFullScreen => {
-				appkit::NSImageNameEnterFullScreenTemplate
-			},
+			NativeIcon::EnterFullScreen => appkit::NSImageNameEnterFullScreenTemplate,
 			NativeIcon::Everyone => appkit::NSImageNameEveryone,
-			NativeIcon::ExitFullScreen => {
-				appkit::NSImageNameExitFullScreenTemplate
-			},
+			NativeIcon::ExitFullScreen => appkit::NSImageNameExitFullScreenTemplate,
 			NativeIcon::FlowView => appkit::NSImageNameFlowViewTemplate,
 			NativeIcon::Folder => appkit::NSImageNameFolder,
 			NativeIcon::FolderBurnable => appkit::NSImageNameFolderBurnable,
 			NativeIcon::FolderSmart => appkit::NSImageNameFolderSmart,
-			NativeIcon::FollowLinkFreestanding => {
-				appkit::NSImageNameFollowLinkFreestandingTemplate
-			},
+			NativeIcon::FollowLinkFreestanding => appkit::NSImageNameFollowLinkFreestandingTemplate,
 			NativeIcon::FontPanel => appkit::NSImageNameFontPanel,
 			NativeIcon::GoLeft => appkit::NSImageNameGoLeftTemplate,
 			NativeIcon::GoRight => appkit::NSImageNameGoRightTemplate,
@@ -1277,37 +1133,23 @@ impl NativeIcon {
 			NativeIcon::InvalidDataFreestanding => {
 				appkit::NSImageNameInvalidDataFreestandingTemplate
 			},
-			NativeIcon::LeftFacingTriangle => {
-				appkit::NSImageNameLeftFacingTriangleTemplate
-			},
+			NativeIcon::LeftFacingTriangle => appkit::NSImageNameLeftFacingTriangleTemplate,
 			NativeIcon::ListView => appkit::NSImageNameListViewTemplate,
 			NativeIcon::LockLocked => appkit::NSImageNameLockLockedTemplate,
 			NativeIcon::LockUnlocked => appkit::NSImageNameLockUnlockedTemplate,
-			NativeIcon::MenuMixedState => {
-				appkit::NSImageNameMenuMixedStateTemplate
-			},
+			NativeIcon::MenuMixedState => appkit::NSImageNameMenuMixedStateTemplate,
 			NativeIcon::MenuOnState => appkit::NSImageNameMenuOnStateTemplate,
 			NativeIcon::MobileMe => appkit::NSImageNameMobileMe,
-			NativeIcon::MultipleDocuments => {
-				appkit::NSImageNameMultipleDocuments
-			},
+			NativeIcon::MultipleDocuments => appkit::NSImageNameMultipleDocuments,
 			NativeIcon::Network => appkit::NSImageNameNetwork,
 			NativeIcon::Path => appkit::NSImageNamePathTemplate,
-			NativeIcon::PreferencesGeneral => {
-				appkit::NSImageNamePreferencesGeneral
-			},
+			NativeIcon::PreferencesGeneral => appkit::NSImageNamePreferencesGeneral,
 			NativeIcon::QuickLook => appkit::NSImageNameQuickLookTemplate,
-			NativeIcon::RefreshFreestanding => {
-				appkit::NSImageNameRefreshFreestandingTemplate
-			},
+			NativeIcon::RefreshFreestanding => appkit::NSImageNameRefreshFreestandingTemplate,
 			NativeIcon::Refresh => appkit::NSImageNameRefreshTemplate,
 			NativeIcon::Remove => appkit::NSImageNameRemoveTemplate,
-			NativeIcon::RevealFreestanding => {
-				appkit::NSImageNameRevealFreestandingTemplate
-			},
-			NativeIcon::RightFacingTriangle => {
-				appkit::NSImageNameRightFacingTriangleTemplate
-			},
+			NativeIcon::RevealFreestanding => appkit::NSImageNameRevealFreestandingTemplate,
+			NativeIcon::RightFacingTriangle => appkit::NSImageNameRightFacingTriangleTemplate,
 			NativeIcon::Share => appkit::NSImageNameShareTemplate,
 			NativeIcon::Slideshow => appkit::NSImageNameSlideshowTemplate,
 			NativeIcon::SmartBadge => appkit::NSImageNameSmartBadgeTemplate,

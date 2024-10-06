@@ -37,17 +37,10 @@ fn main() {
 	{
 		let menu_bar = menu_bar.clone();
 		event_loop_builder.with_msg_hook(move |msg| {
-			use windows_sys::Win32::UI::WindowsAndMessaging::{
-				TranslateAcceleratorW,
-				MSG,
-			};
+			use windows_sys::Win32::UI::WindowsAndMessaging::{TranslateAcceleratorW, MSG};
 			unsafe {
 				let msg = msg as *const MSG;
-				let translated = TranslateAcceleratorW(
-					(*msg).hwnd,
-					menu_bar.haccel() as _,
-					msg,
-				);
+				let translated = TranslateAcceleratorW((*msg).hwnd, menu_bar.haccel() as _, msg);
 				translated == 1
 			}
 		});
@@ -55,10 +48,8 @@ fn main() {
 
 	let event_loop = event_loop_builder.build();
 
-	let window =
-		WindowBuilder::new().with_title("Window 1").build(&event_loop).unwrap();
-	let window2 =
-		WindowBuilder::new().with_title("Window 2").build(&event_loop).unwrap();
+	let window = WindowBuilder::new().with_title("Window 1").build(&event_loop).unwrap();
+	let window2 = WindowBuilder::new().with_title("Window 2").build(&event_loop).unwrap();
 
 	#[cfg(target_os = "macos")]
 	{
@@ -100,20 +91,10 @@ fn main() {
 		Some(Accelerator::new(Some(Modifiers::CONTROL), Code::KeyC)),
 	);
 
-	let check_custom_i_1 = CheckMenuItem::with_id(
-		"check-custom-1",
-		"Check Custom 1",
-		true,
-		true,
-		None,
-	);
-	let check_custom_i_2 = CheckMenuItem::with_id(
-		"check-custom-2",
-		"Check Custom 2",
-		false,
-		true,
-		None,
-	);
+	let check_custom_i_1 =
+		CheckMenuItem::with_id("check-custom-1", "Check Custom 1", true, true, None);
+	let check_custom_i_2 =
+		CheckMenuItem::with_id("check-custom-2", "Check Custom 2", false, true, None);
 	let check_custom_i_3 = CheckMenuItem::with_id(
 		"check-custom-3",
 		"Check Custom 3",
@@ -164,10 +145,8 @@ fn main() {
 	}
 	#[cfg(target_os = "linux")]
 	{
-		menu_bar
-			.init_for_gtk_window(window.gtk_window(), window.default_vbox());
-		menu_bar
-			.init_for_gtk_window(window2.gtk_window(), window2.default_vbox());
+		menu_bar.init_for_gtk_window(window.gtk_window(), window.default_vbox());
+		menu_bar.init_for_gtk_window(window2.gtk_window(), window2.default_vbox());
 	}
 	#[cfg(target_os = "macos")]
 	{
@@ -183,9 +162,9 @@ fn main() {
 		*control_flow = ControlFlow::Wait;
 
 		match event {
-			Event::WindowEvent {
-				event: WindowEvent::CloseRequested, ..
-			} => *control_flow = ControlFlow::Exit,
+			Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
+				*control_flow = ControlFlow::Exit
+			},
 			Event::WindowEvent {
 				event: WindowEvent::CursorMoved { position, .. },
 				window_id,
@@ -207,11 +186,7 @@ fn main() {
 				show_context_menu(
 					if window_id == window.id() { &window } else { &window2 },
 					&file_m,
-					if use_window_pos {
-						Some(window_cursor_position.into())
-					} else {
-						None
-					},
+					if use_window_pos { Some(window_cursor_position.into()) } else { None },
 				);
 				use_window_pos = !use_window_pos;
 			},
@@ -223,40 +198,23 @@ fn main() {
 
 		if let Ok(event) = menu_channel.try_recv() {
 			if event.id == custom_i_1.id() {
-				custom_i_1.set_accelerator(Some(Accelerator::new(
-					Some(Modifiers::SHIFT),
-					Code::KeyF,
-				)));
-				file_m.insert(
-					&MenuItem::with_id(
-						"new-menu-id",
-						"New Menu Item",
-						true,
-						None,
-					),
-					2,
-				);
+				custom_i_1
+					.set_accelerator(Some(Accelerator::new(Some(Modifiers::SHIFT), Code::KeyF)));
+				file_m.insert(&MenuItem::with_id("new-menu-id", "New Menu Item", true, None), 2);
 			}
 			println!("{event:?}");
 		}
 	})
 }
 
-fn show_context_menu(
-	window:&Window,
-	menu:&dyn ContextMenu,
-	position:Option<Position>,
-) {
+fn show_context_menu(window:&Window, menu:&dyn ContextMenu, position:Option<Position>) {
 	println!("Show context menu at position {position:?}");
 	#[cfg(target_os = "windows")]
 	unsafe {
 		menu.show_context_menu_for_hwnd(window.hwnd() as _, position);
 	}
 	#[cfg(target_os = "linux")]
-	menu.show_context_menu_for_gtk_window(
-		window.gtk_window().as_ref(),
-		position,
-	);
+	menu.show_context_menu_for_gtk_window(window.gtk_window().as_ref(), position);
 	#[cfg(target_os = "macos")]
 	unsafe {
 		menu.show_context_menu_for_nsview(window.ns_view() as _, position);
@@ -265,12 +223,10 @@ fn show_context_menu(
 
 fn load_icon(path:&std::path::Path) -> muda::Icon {
 	let (icon_rgba, icon_width, icon_height) = {
-		let image =
-			image::open(path).expect("Failed to open icon path").into_rgba8();
+		let image = image::open(path).expect("Failed to open icon path").into_rgba8();
 		let (width, height) = image.dimensions();
 		let rgba = image.into_raw();
 		(rgba, width, height)
 	};
-	muda::Icon::from_rgba(icon_rgba, icon_width, icon_height)
-		.expect("Failed to open icon")
+	muda::Icon::from_rgba(icon_rgba, icon_width, icon_height).expect("Failed to open icon")
 }

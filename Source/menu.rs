@@ -4,14 +4,7 @@
 
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{
-	dpi::Position,
-	util::AddOp,
-	ContextMenu,
-	IsMenuItem,
-	MenuId,
-	MenuItemKind,
-};
+use crate::{dpi::Position, util::AddOp, ContextMenu, IsMenuItem, MenuId, MenuItemKind};
 
 /// A root menu that can be added to a Window on Windows and Linux
 /// and used as the app global menu on macOS.
@@ -29,10 +22,7 @@ impl Menu {
 	/// Creates a new menu.
 	pub fn new() -> Self {
 		let menu = crate::platform_impl::Menu::new(None);
-		Self {
-			id:Rc::new(menu.id().clone()),
-			inner:Rc::new(RefCell::new(menu)),
-		}
+		Self { id:Rc::new(menu.id().clone()), inner:Rc::new(RefCell::new(menu)) }
 	}
 
 	/// Creates a new menu with the specified id.
@@ -40,9 +30,7 @@ impl Menu {
 		let id = id.into();
 		Self {
 			id:Rc::new(id.clone()),
-			inner:Rc::new(RefCell::new(crate::platform_impl::Menu::new(Some(
-				id,
-			)))),
+			inner:Rc::new(RefCell::new(crate::platform_impl::Menu::new(Some(id)))),
 		}
 	}
 
@@ -125,11 +113,7 @@ impl Menu {
 	/// - **macOS:** Only [`Submenu`] can be added to the menu
 	///
 	/// [`Submenu`]: crate::Submenu
-	pub fn insert(
-		&self,
-		item:&dyn IsMenuItem,
-		position:usize,
-	) -> crate::Result<()> {
+	pub fn insert(&self, item:&dyn IsMenuItem, position:usize) -> crate::Result<()> {
 		self.inner.borrow_mut().add_menu_item(item, AddOp::Insert(position))
 	}
 
@@ -140,11 +124,7 @@ impl Menu {
 	/// - **macOS:** Only [`Submenu`] can be added to the menu
 	///
 	/// [`Submenu`]: crate::Submenu
-	pub fn insert_items(
-		&self,
-		items:&[&dyn IsMenuItem],
-		position:usize,
-	) -> crate::Result<()> {
+	pub fn insert_items(&self, items:&[&dyn IsMenuItem], position:usize) -> crate::Result<()> {
 		for (i, item) in items.iter().enumerate() {
 			self.insert(*item, position + i)?
 		}
@@ -198,11 +178,7 @@ impl Menu {
 	///
 	/// Panics if the gtk event loop hasn't been initialized on the thread.
 	#[cfg(target_os = "linux")]
-	pub fn init_for_gtk_window<W, C>(
-		&self,
-		window:&W,
-		container:Option<&C>,
-	) -> crate::Result<()>
+	pub fn init_for_gtk_window<W, C>(&self, window:&W, container:Option<&C>) -> crate::Result<()>
 	where
 		W: gtk::prelude::IsA<gtk::Window>,
 		W: gtk::prelude::IsA<gtk::Container>,
@@ -272,11 +248,7 @@ impl Menu {
 	///
 	/// The `hwnd` must be a valid window HWND.
 	#[cfg(target_os = "windows")]
-	pub unsafe fn set_theme_for_hwnd(
-		&self,
-		hwnd:isize,
-		theme:MenuTheme,
-	) -> crate::Result<()> {
+	pub unsafe fn set_theme_for_hwnd(&self, hwnd:isize, theme:MenuTheme) -> crate::Result<()> {
 		self.inner.borrow().set_theme_for_hwnd(hwnd, theme)
 	}
 
@@ -358,10 +330,7 @@ impl Menu {
 	/// Returns the [`gtk::MenuBar`] that is associated with this window if it
 	/// exists. This is useful to get information about the menubar for example
 	/// its height.
-	pub fn gtk_menubar_for_gtk_window<W>(
-		self,
-		window:&W,
-	) -> Option<gtk::MenuBar>
+	pub fn gtk_menubar_for_gtk_window<W>(self, window:&W) -> Option<gtk::MenuBar>
 	where
 		W: gtk::prelude::IsA<gtk::Window>, {
 		self.inner.borrow().gtk_menubar_for_gtk_window(window)
@@ -383,9 +352,7 @@ impl Menu {
 
 	/// Removes this menu from an NSApp.
 	#[cfg(target_os = "macos")]
-	pub fn remove_for_nsapp(&self) {
-		self.inner.borrow_mut().remove_for_nsapp()
-	}
+	pub fn remove_for_nsapp(&self) { self.inner.borrow_mut().remove_for_nsapp() }
 }
 
 impl ContextMenu for Menu {
@@ -393,11 +360,7 @@ impl ContextMenu for Menu {
 	fn hpopupmenu(&self) -> isize { self.inner.borrow().hpopupmenu() }
 
 	#[cfg(target_os = "windows")]
-	unsafe fn show_context_menu_for_hwnd(
-		&self,
-		hwnd:isize,
-		position:Option<Position>,
-	) {
+	unsafe fn show_context_menu_for_hwnd(&self, hwnd:isize, position:Option<Position>) {
 		self.inner.borrow_mut().show_context_menu_for_hwnd(hwnd, position)
 	}
 
@@ -412,20 +375,12 @@ impl ContextMenu for Menu {
 	}
 
 	#[cfg(target_os = "linux")]
-	fn show_context_menu_for_gtk_window(
-		&self,
-		window:&gtk::Window,
-		position:Option<Position>,
-	) {
-		self.inner
-			.borrow_mut()
-			.show_context_menu_for_gtk_window(window, position)
+	fn show_context_menu_for_gtk_window(&self, window:&gtk::Window, position:Option<Position>) {
+		self.inner.borrow_mut().show_context_menu_for_gtk_window(window, position)
 	}
 
 	#[cfg(target_os = "linux")]
-	fn gtk_context_menu(&self) -> gtk::Menu {
-		self.inner.borrow_mut().gtk_context_menu()
-	}
+	fn gtk_context_menu(&self) -> gtk::Menu { self.inner.borrow_mut().gtk_context_menu() }
 
 	#[cfg(target_os = "macos")]
 	unsafe fn show_context_menu_for_nsview(

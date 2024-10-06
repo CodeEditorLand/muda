@@ -104,9 +104,7 @@ impl Accelerator {
 			Code::F23 => "\u{F71A}".into(),
 			Code::F24 => "\u{F71B}".into(),
 			key => {
-				return Err(AcceleratorParseError::UnsupportedKey(
-					key.to_string(),
-				));
+				return Err(AcceleratorParseError::UnsupportedKey(key.to_string()));
 			},
 		})
 	}

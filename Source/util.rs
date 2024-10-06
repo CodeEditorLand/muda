@@ -17,9 +17,7 @@ impl Counter {
 	pub const fn new() -> Self { Self(AtomicU32::new(1)) }
 
 	#[allow(unused)]
-	pub const fn new_with_start(start:u32) -> Self {
-		Self(AtomicU32::new(start))
-	}
+	pub const fn new_with_start(start:u32) -> Self { Self(AtomicU32::new(start)) }
 
 	pub fn next(&self) -> u32 { self.0.fetch_add(1, Ordering::Relaxed) }
 }

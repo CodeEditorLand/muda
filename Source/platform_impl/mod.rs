@@ -46,10 +46,7 @@ impl MenuChild {
 			},
 			MenuItemType::Predefined => {
 				let id = c.borrow().id().clone();
-				MenuItemKind::Predefined(PredefinedMenuItem {
-					id:Rc::new(id),
-					inner:c,
-				})
+				MenuItemKind::Predefined(PredefinedMenuItem { id:Rc::new(id), inner:c })
 			},
 			MenuItemType::Check => {
 				let id = c.borrow().id().clone();

@@ -35,17 +35,10 @@ fn main() {
 	{
 		let menu_bar = menu_bar.clone();
 		event_loop_builder.with_msg_hook(move |msg| {
-			use windows_sys::Win32::UI::WindowsAndMessaging::{
-				TranslateAcceleratorW,
-				MSG,
-			};
+			use windows_sys::Win32::UI::WindowsAndMessaging::{TranslateAcceleratorW, MSG};
 			unsafe {
 				let msg = msg as *const MSG;
-				let translated = TranslateAcceleratorW(
-					(*msg).hwnd,
-					menu_bar.haccel() as _,
-					msg,
-				);
+				let translated = TranslateAcceleratorW((*msg).hwnd, menu_bar.haccel() as _, msg);
 				translated == 1
 			}
 		});
@@ -55,10 +48,8 @@ fn main() {
 
 	let event_loop = event_loop_builder.build().unwrap();
 
-	let window =
-		WindowBuilder::new().with_title("Window 1").build(&event_loop).unwrap();
-	let window2 =
-		WindowBuilder::new().with_title("Window 2").build(&event_loop).unwrap();
+	let window = WindowBuilder::new().with_title("Window 1").build(&event_loop).unwrap();
+	let window2 = WindowBuilder::new().with_title("Window 2").build(&event_loop).unwrap();
 
 	#[cfg(target_os = "macos")]
 	{
@@ -83,21 +74,15 @@ fn main() {
 
 	menu_bar.append_items(&[&file_m, &edit_m, &window_m]);
 
-	let custom_i_1 = MenuItem::new(
-		"C&ustom 1",
-		true,
-		Some(Accelerator::new(Some(Modifiers::ALT), Code::KeyC)),
-	);
+	let custom_i_1 =
+		MenuItem::new("C&ustom 1", true, Some(Accelerator::new(Some(Modifiers::ALT), Code::KeyC)));
 
 	let path = concat!(env!("CARGO_MANIFEST_DIR"), "/examples/icon.png");
 	let icon = load_icon(std::path::Path::new(path));
-	let image_item =
-		IconMenuItem::new("Image Custom 1", true, Some(icon), None);
+	let image_item = IconMenuItem::new("Image Custom 1", true, Some(icon), None);
 
-	let check_custom_i_1 =
-		CheckMenuItem::new("Check Custom 1", true, true, None);
-	let check_custom_i_2 =
-		CheckMenuItem::new("Check Custom 2", false, true, None);
+	let check_custom_i_1 = CheckMenuItem::new("Check Custom 1", true, true, None);
+	let check_custom_i_2 = CheckMenuItem::new("Check Custom 2", false, true, None);
 	let check_custom_i_3 = CheckMenuItem::new(
 		"Check Custom 3",
 		true,
@@ -143,14 +128,10 @@ fn main() {
 	#[cfg(target_os = "windows")]
 	{
 		use winit::raw_window_handle::*;
-		if let RawWindowHandle::Win32(handle) =
-			window.window_handle().unwrap().as_raw()
-		{
+		if let RawWindowHandle::Win32(handle) = window.window_handle().unwrap().as_raw() {
 			unsafe { menu_bar.init_for_hwnd(handle.hwnd.get()) };
 		}
-		if let RawWindowHandle::Win32(handle) =
-			window2.window_handle().unwrap().as_raw()
-		{
+		if let RawWindowHandle::Win32(handle) = window2.window_handle().unwrap().as_raw() {
 			unsafe { menu_bar.init_for_hwnd(handle.hwnd.get()) };
 		}
 	}
@@ -168,9 +149,7 @@ fn main() {
 		event_loop.set_control_flow(ControlFlow::Wait);
 
 		match event {
-			Event::WindowEvent {
-				event: WindowEvent::CloseRequested, ..
-			} => event_loop.exit(),
+			Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => event_loop.exit(),
 			Event::WindowEvent {
 				event: WindowEvent::CursorMoved { position, .. },
 				window_id,
@@ -192,11 +171,7 @@ fn main() {
 				show_context_menu(
 					if window_id == window.id() { &window } else { &window2 },
 					&file_m,
-					if use_window_pos {
-						Some(window_cursor_position.into())
-					} else {
-						None
-					},
+					if use_window_pos { Some(window_cursor_position.into()) } else { None },
 				);
 				use_window_pos = !use_window_pos;
 			},
@@ -212,47 +187,30 @@ fn main() {
 	});
 }
 
-fn show_context_menu(
-	window:&Window,
-	menu:&dyn ContextMenu,
-	position:Option<Position>,
-) {
+fn show_context_menu(window:&Window, menu:&dyn ContextMenu, position:Option<Position>) {
 	println!("Show context menu at position {position:?}");
 	#[cfg(target_os = "windows")]
 	{
 		use winit::raw_window_handle::*;
-		if let RawWindowHandle::Win32(handle) =
-			window.window_handle().unwrap().as_raw()
-		{
-			unsafe {
-				menu.show_context_menu_for_hwnd(handle.hwnd.get(), position)
-			};
+		if let RawWindowHandle::Win32(handle) = window.window_handle().unwrap().as_raw() {
+			unsafe { menu.show_context_menu_for_hwnd(handle.hwnd.get(), position) };
 		}
 	}
 	#[cfg(target_os = "macos")]
 	{
 		use winit::raw_window_handle::*;
-		if let RawWindowHandle::AppKit(handle) =
-			window.window_handle().unwrap().as_raw()
-		{
-			unsafe {
-				menu.show_context_menu_for_nsview(
-					handle.ns_view.as_ptr() as _,
-					position,
-				)
-			};
+		if let RawWindowHandle::AppKit(handle) = window.window_handle().unwrap().as_raw() {
+			unsafe { menu.show_context_menu_for_nsview(handle.ns_view.as_ptr() as _, position) };
 		}
 	}
 }
 
 fn load_icon(path:&std::path::Path) -> muda::Icon {
 	let (icon_rgba, icon_width, icon_height) = {
-		let image =
-			image::open(path).expect("Failed to open icon path").into_rgba8();
+		let image = image::open(path).expect("Failed to open icon path").into_rgba8();
 		let (width, height) = image.dimensions();
 		let rgba = image.into_raw();
 		(rgba, width, height)
 	};
-	muda::Icon::from_rgba(icon_rgba, icon_width, icon_height)
-		.expect("Failed to open icon")
+	muda::Icon::from_rgba(icon_rgba, icon_width, icon_height).expect("Failed to open icon")
 }

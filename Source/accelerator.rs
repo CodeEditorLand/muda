@@ -42,9 +42,8 @@ pub enum AcceleratorParseError {
 	#[error("Found empty token while parsing accelerator: {0}")]
 	EmptyToken(String),
 	#[error(
-		"Invalid accelerator format: \"{0}\", an accelerator should have the \
-		 modifiers first and only one main key, for example: \"Shift + Alt + \
-		 K\""
+		"Invalid accelerator format: \"{0}\", an accelerator should have the modifiers first and \
+		 only one main key, for example: \"Shift + Alt + K\""
 	)]
 	InvalidFormat(String),
 }
@@ -104,16 +103,9 @@ impl Accelerator {
 
 	/// Returns `true` if this [`Code`] and [`Modifiers`] matches this
 	/// `Accelerator`.
-	pub fn matches(
-		&self,
-		modifiers:impl Borrow<Modifiers>,
-		key:impl Borrow<Code>,
-	) -> bool {
+	pub fn matches(&self, modifiers:impl Borrow<Modifiers>, key:impl Borrow<Code>) -> bool {
 		// Should be a const but const bit_or doesn't work here.
-		let base_mods = Modifiers::SHIFT
-			| Modifiers::CONTROL
-			| Modifiers::ALT
-			| Modifiers::SUPER;
+		let base_mods = Modifiers::SHIFT | Modifiers::CONTROL | Modifiers::ALT | Modifiers::SUPER;
 		let modifiers = modifiers.borrow();
 		let key = key.borrow();
 		self.mods == *modifiers & base_mods && self.key == *key
@@ -131,22 +123,16 @@ impl FromStr for Accelerator {
 impl TryFrom<&str> for Accelerator {
 	type Error = AcceleratorParseError;
 
-	fn try_from(value:&str) -> Result<Self, Self::Error> {
-		parse_accelerator(value)
-	}
+	fn try_from(value:&str) -> Result<Self, Self::Error> { parse_accelerator(value) }
 }
 
 impl TryFrom<String> for Accelerator {
 	type Error = AcceleratorParseError;
 
-	fn try_from(value:String) -> Result<Self, Self::Error> {
-		parse_accelerator(&value)
-	}
+	fn try_from(value:String) -> Result<Self, Self::Error> { parse_accelerator(&value) }
 }
 
-fn parse_accelerator(
-	accelerator:&str,
-) -> Result<Accelerator, AcceleratorParseError> {
+fn parse_accelerator(accelerator:&str) -> Result<Accelerator, AcceleratorParseError> {
 	let tokens = accelerator.split('+').collect::<Vec<&str>>();
 
 	let mut mods = Modifiers::empty();
@@ -164,9 +150,7 @@ fn parse_accelerator(
 				let token = raw.trim();
 
 				if token.is_empty() {
-					return Err(AcceleratorParseError::EmptyToken(
-						accelerator.to_string(),
-					));
+					return Err(AcceleratorParseError::EmptyToken(accelerator.to_string()));
 				}
 
 				if key.is_some() {
@@ -174,12 +158,9 @@ fn parse_accelerator(
 					// key, so by reaching this code, the function either
 					// received more than one main key or  the accelerator
 					// is not in the right order examples:
-					// 1. "Ctrl+Shift+C+A" => only one main key should be
-					//    allowd.
+					// 1. "Ctrl+Shift+C+A" => only one main key should be allowd.
 					// 2. "Ctrl+C+Shift" => wrong order
-					return Err(AcceleratorParseError::InvalidFormat(
-						accelerator.to_string(),
-					));
+					return Err(AcceleratorParseError::InvalidFormat(accelerator.to_string()));
 				}
 
 				match token.to_uppercase().as_str() {
@@ -196,13 +177,11 @@ fn parse_accelerator(
 						mods |= Modifiers::SHIFT;
 					},
 					#[cfg(target_os = "macos")]
-					"COMMANDORCONTROL" | "COMMANDORCTRL" | "CMDORCTRL"
-					| "CMDORCONTROL" => {
+					"COMMANDORCONTROL" | "COMMANDORCTRL" | "CMDORCTRL" | "CMDORCONTROL" => {
 						mods |= Modifiers::SUPER;
 					},
 					#[cfg(not(target_os = "macos"))]
-					"COMMANDORCONTROL" | "COMMANDORCTRL" | "CMDORCTRL"
-					| "CMDORCONTROL" => {
+					"COMMANDORCONTROL" | "COMMANDORCTRL" | "CMDORCTRL" | "CMDORCONTROL" => {
 						mods |= Modifiers::CONTROL;
 					},
 					_ => {
@@ -213,9 +192,7 @@ fn parse_accelerator(
 		},
 	}
 
-	let key = key.ok_or_else(|| {
-		AcceleratorParseError::InvalidFormat(accelerator.to_string())
-	})?;
+	let key = key.ok_or_else(|| AcceleratorParseError::InvalidFormat(accelerator.to_string()))?;
 	Ok(Accelerator::new(Some(mods), key))
 }
 
@@ -371,10 +348,7 @@ fn test_parse_accelerator() {
 	assert_parse_accelerator!(
 		"super+ctrl+SHIFT+alt+ArrowUp",
 		Accelerator {
-			mods:Modifiers::SUPER
-				| Modifiers::CONTROL
-				| Modifiers::SHIFT
-				| Modifiers::ALT,
+			mods:Modifiers::SUPER | Modifiers::CONTROL | Modifiers::SHIFT | Modifiers::ALT,
 			key:Code::ArrowUp,
 			id:0,
 		}

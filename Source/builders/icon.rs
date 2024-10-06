@@ -72,13 +72,7 @@ impl IconMenuItemBuilder {
 	pub fn build(self) -> IconMenuItem {
 		if let Some(id) = self.id {
 			if self.icon.is_some() {
-				IconMenuItem::with_id(
-					id,
-					self.text,
-					self.enabled,
-					self.icon,
-					self.accelerator,
-				)
+				IconMenuItem::with_id(id, self.text, self.enabled, self.icon, self.accelerator)
 			} else {
 				IconMenuItem::with_id_and_native_icon(
 					id,
@@ -89,12 +83,7 @@ impl IconMenuItemBuilder {
 				)
 			}
 		} else if self.icon.is_some() {
-			IconMenuItem::new(
-				self.text,
-				self.enabled,
-				self.icon,
-				self.accelerator,
-			)
+			IconMenuItem::new(self.text, self.enabled, self.icon, self.accelerator)
 		} else {
 			IconMenuItem::with_native_icon(
 				self.text,

@@ -149,10 +149,7 @@ impl PredefinedMenuItem {
 	}
 
 	/// About app menu item
-	pub fn about(
-		text:Option<&str>,
-		metadata:Option<AboutMetadata>,
-	) -> PredefinedMenuItem {
+	pub fn about(text:Option<&str>, metadata:Option<AboutMetadata>) -> PredefinedMenuItem {
 		PredefinedMenuItem::new(PredefinedMenuItemType::About(metadata), text)
 	}
 
@@ -179,10 +176,7 @@ impl PredefinedMenuItem {
 			item,
 			text.map(|t| t.as_ref().to_string()),
 		);
-		Self {
-			id:Rc::new(item.id().clone()),
-			inner:Rc::new(RefCell::new(item)),
-		}
+		Self { id:Rc::new(item.id().clone()), inner:Rc::new(RefCell::new(item)) }
 	}
 
 	/// Returns a unique identifier associated with this predefined menu item.
@@ -192,9 +186,7 @@ impl PredefinedMenuItem {
 	pub fn text(&self) -> String { self.inner.borrow().text() }
 
 	/// Set the text for this predefined menu item.
-	pub fn set_text<S:AsRef<str>>(&self, text:S) {
-		self.inner.borrow_mut().set_text(text.as_ref())
-	}
+	pub fn set_text<S:AsRef<str>>(&self, text:S) { self.inner.borrow_mut().set_text(text.as_ref()) }
 
 	/// Convert this menu item into its menu ID.
 	pub fn into_id(mut self) -> MenuId {
@@ -212,11 +204,8 @@ fn test_about_metadata() {
 	assert_eq!(AboutMetadata { ..Default::default() }.full_version(), None);
 
 	assert_eq!(
-		AboutMetadata {
-			version:Some("Version: 1.inner".into()),
-			..Default::default()
-		}
-		.full_version(),
+		AboutMetadata { version:Some("Version: 1.inner".into()), ..Default::default() }
+			.full_version(),
 		Some("Version: 1.inner".into())
 	);
 
@@ -296,29 +285,16 @@ impl PredefinedMenuItemType {
 
 	pub(crate) fn accelerator(&self) -> Option<Accelerator> {
 		match self {
-			PredefinedMenuItemType::Copy => {
-				Some(Accelerator::new(Some(CMD_OR_CTRL), Code::KeyC))
-			},
-			PredefinedMenuItemType::Cut => {
-				Some(Accelerator::new(Some(CMD_OR_CTRL), Code::KeyX))
-			},
-			PredefinedMenuItemType::Paste => {
-				Some(Accelerator::new(Some(CMD_OR_CTRL), Code::KeyV))
-			},
-			PredefinedMenuItemType::Undo => {
-				Some(Accelerator::new(Some(CMD_OR_CTRL), Code::KeyZ))
-			},
+			PredefinedMenuItemType::Copy => Some(Accelerator::new(Some(CMD_OR_CTRL), Code::KeyC)),
+			PredefinedMenuItemType::Cut => Some(Accelerator::new(Some(CMD_OR_CTRL), Code::KeyX)),
+			PredefinedMenuItemType::Paste => Some(Accelerator::new(Some(CMD_OR_CTRL), Code::KeyV)),
+			PredefinedMenuItemType::Undo => Some(Accelerator::new(Some(CMD_OR_CTRL), Code::KeyZ)),
 			#[cfg(target_os = "macos")]
 			PredefinedMenuItemType::Redo => {
-				Some(Accelerator::new(
-					Some(CMD_OR_CTRL | Modifiers::SHIFT),
-					Code::KeyZ,
-				))
+				Some(Accelerator::new(Some(CMD_OR_CTRL | Modifiers::SHIFT), Code::KeyZ))
 			},
 			#[cfg(not(target_os = "macos"))]
-			PredefinedMenuItemType::Redo => {
-				Some(Accelerator::new(Some(CMD_OR_CTRL), Code::KeyY))
-			},
+			PredefinedMenuItemType::Redo => Some(Accelerator::new(Some(CMD_OR_CTRL), Code::KeyY)),
 			PredefinedMenuItemType::SelectAll => {
 				Some(Accelerator::new(Some(CMD_OR_CTRL), Code::KeyA))
 			},
@@ -327,32 +303,18 @@ impl PredefinedMenuItemType {
 			},
 			#[cfg(target_os = "macos")]
 			PredefinedMenuItemType::Fullscreen => {
-				Some(Accelerator::new(
-					Some(Modifiers::META | Modifiers::CONTROL),
-					Code::KeyF,
-				))
+				Some(Accelerator::new(Some(Modifiers::META | Modifiers::CONTROL), Code::KeyF))
 			},
-			PredefinedMenuItemType::Hide => {
-				Some(Accelerator::new(Some(CMD_OR_CTRL), Code::KeyH))
-			},
+			PredefinedMenuItemType::Hide => Some(Accelerator::new(Some(CMD_OR_CTRL), Code::KeyH)),
 			PredefinedMenuItemType::HideOthers => {
-				Some(Accelerator::new(
-					Some(CMD_OR_CTRL | Modifiers::ALT),
-					Code::KeyH,
-				))
+				Some(Accelerator::new(Some(CMD_OR_CTRL | Modifiers::ALT), Code::KeyH))
 			},
 			#[cfg(target_os = "macos")]
-			PredefinedMenuItemType::CloseWindow => {
-				Some(Accelerator::new(Some(CMD_OR_CTRL), Code::KeyW))
-			},
+			PredefinedMenuItemType::CloseWindow => Some(Accelerator::new(Some(CMD_OR_CTRL), Code::KeyW)),
 			#[cfg(not(target_os = "macos"))]
-			PredefinedMenuItemType::CloseWindow => {
-				Some(Accelerator::new(Some(Modifiers::ALT), Code::F4))
-			},
+			PredefinedMenuItemType::CloseWindow => Some(Accelerator::new(Some(Modifiers::ALT), Code::F4)),
 			#[cfg(target_os = "macos")]
-			PredefinedMenuItemType::Quit => {
-				Some(Accelerator::new(Some(CMD_OR_CTRL), Code::KeyQ))
-			},
+			PredefinedMenuItemType::Quit => Some(Accelerator::new(Some(CMD_OR_CTRL), Code::KeyQ)),
 			_ => None,
 		}
 	}
