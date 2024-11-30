@@ -38,22 +38,27 @@ impl MenuChild {
 		match self.item_type() {
 			MenuItemType::Submenu => {
 				let id = c.borrow().id().clone();
+
 				MenuItemKind::Submenu(Submenu { id:Rc::new(id), inner:c })
 			},
 			MenuItemType::MenuItem => {
 				let id = c.borrow().id().clone();
+
 				MenuItemKind::MenuItem(MenuItem { id:Rc::new(id), inner:c })
 			},
 			MenuItemType::Predefined => {
 				let id = c.borrow().id().clone();
+
 				MenuItemKind::Predefined(PredefinedMenuItem { id:Rc::new(id), inner:c })
 			},
 			MenuItemType::Check => {
 				let id = c.borrow().id().clone();
+
 				MenuItemKind::Check(CheckMenuItem { id:Rc::new(id), inner:c })
 			},
 			MenuItemType::Icon => {
 				let id = c.borrow().id().clone();
+
 				MenuItemKind::Icon(IconMenuItem { id:Rc::new(id), inner:c })
 			},
 		}

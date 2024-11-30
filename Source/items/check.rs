@@ -46,6 +46,7 @@ impl CheckMenuItem {
 			accelerator,
 			None,
 		);
+
 		Self { id:Rc::new(item.id().clone()), inner:Rc::new(RefCell::new(item)) }
 	}
 
@@ -62,6 +63,7 @@ impl CheckMenuItem {
 		accelerator:Option<Accelerator>,
 	) -> Self {
 		let id = id.into();
+
 		Self {
 			id:Rc::new(id.clone()),
 			inner:Rc::new(RefCell::new(crate::platform_impl::MenuChild::new_check(

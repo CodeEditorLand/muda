@@ -81,7 +81,9 @@ mod constructors {
 			if rgba.len() % PIXEL_SIZE != 0 {
 				return Err(BadIcon::ByteCountNotDivisibleBy4 { byte_count:rgba.len() });
 			}
+
 			let pixel_count = rgba.len() / PIXEL_SIZE;
+
 			if pixel_count != (width * height) as usize {
 				Err(BadIcon::DimensionsVsPixelCount {
 					width,
@@ -99,6 +101,7 @@ mod constructors {
 		pub fn from_rgba(rgba:Vec<u8>, width:u32, height:u32) -> Result<Self, BadIcon> {
 			// Create the rgba icon anyway to validate the input
 			let _ = RgbaIcon::from_rgba(rgba, width, height)?;
+
 			Ok(NoIcon)
 		}
 	}
@@ -138,6 +141,7 @@ impl Icon {
 		size:Option<(u32, u32)>,
 	) -> Result<Self, BadIcon> {
 		let win_icon = PlatformIcon::from_path(path, size)?;
+
 		Ok(Icon { inner:win_icon })
 	}
 
@@ -151,6 +155,7 @@ impl Icon {
 	#[cfg(windows)]
 	pub fn from_resource(ordinal:u16, size:Option<(u32, u32)>) -> Result<Self, BadIcon> {
 		let win_icon = PlatformIcon::from_resource(ordinal, size)?;
+
 		Ok(Icon { inner:win_icon })
 	}
 }

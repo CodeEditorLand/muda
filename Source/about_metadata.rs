@@ -118,7 +118,9 @@ macro_rules! from_cargo_metadata {
 			}
 
 			m.comments = non_empty(::std::env!("CARGO_PKG_DESCRIPTION"));
+
 			m.license = non_empty(::std::env!("CARGO_PKG_LICENSE"));
+
 			m.website = non_empty(::std::env!("CARGO_PKG_HOMEPAGE"));
 		}
 
@@ -138,12 +140,14 @@ impl AboutMetadataBuilder {
 	/// Sets the application name.
 	pub fn name<S:Into<String>>(mut self, name:Option<S>) -> Self {
 		self.0.name = name.map(|s| s.into());
+
 		self
 	}
 
 	/// Sets the application version.
 	pub fn version<S:Into<String>>(mut self, version:Option<S>) -> Self {
 		self.0.version = version.map(|s| s.into());
+
 		self
 	}
 
@@ -154,6 +158,7 @@ impl AboutMetadataBuilder {
 	/// - **Windows / Linux:** Appended to the end of `version` in parentheses.
 	pub fn short_version<S:Into<String>>(mut self, short_version:Option<S>) -> Self {
 		self.0.short_version = short_version.map(|s| s.into());
+
 		self
 	}
 
@@ -164,6 +169,7 @@ impl AboutMetadataBuilder {
 	/// - **macOS:** Unsupported.
 	pub fn authors(mut self, authors:Option<Vec<String>>) -> Self {
 		self.0.authors = authors;
+
 		self
 	}
 
@@ -174,12 +180,14 @@ impl AboutMetadataBuilder {
 	/// - **macOS:** Unsupported.
 	pub fn comments<S:Into<String>>(mut self, comments:Option<S>) -> Self {
 		self.0.comments = comments.map(|s| s.into());
+
 		self
 	}
 
 	/// Sets the copyright of the application.
 	pub fn copyright<S:Into<String>>(mut self, copyright:Option<S>) -> Self {
 		self.0.copyright = copyright.map(|s| s.into());
+
 		self
 	}
 
@@ -190,6 +198,7 @@ impl AboutMetadataBuilder {
 	/// - **macOS:** Unsupported.
 	pub fn license<S:Into<String>>(mut self, license:Option<S>) -> Self {
 		self.0.license = license.map(|s| s.into());
+
 		self
 	}
 
@@ -200,6 +209,7 @@ impl AboutMetadataBuilder {
 	/// - **macOS:** Unsupported.
 	pub fn website<S:Into<String>>(mut self, website:Option<S>) -> Self {
 		self.0.website = website.map(|s| s.into());
+
 		self
 	}
 
@@ -210,6 +220,7 @@ impl AboutMetadataBuilder {
 	/// - **macOS:** Unsupported.
 	pub fn website_label<S:Into<String>>(mut self, website_label:Option<S>) -> Self {
 		self.0.website_label = website_label.map(|s| s.into());
+
 		self
 	}
 
@@ -220,6 +231,7 @@ impl AboutMetadataBuilder {
 	/// - **Windows / Linux:** Unsupported.
 	pub fn credits<S:Into<String>>(mut self, credits:Option<S>) -> Self {
 		self.0.credits = credits.map(|s| s.into());
+
 		self
 	}
 
@@ -230,6 +242,7 @@ impl AboutMetadataBuilder {
 	/// - **Windows:** Unsupported.
 	pub fn icon(mut self, icon:Option<Icon>) -> Self {
 		self.0.icon = icon;
+
 		self
 	}
 
@@ -243,14 +256,19 @@ mod tests {
 	#[test]
 	fn test_build_from_metadata() {
 		let m = from_cargo_metadata!();
+
 		assert_eq!(m.name, Some("muda".to_string()));
+
 		assert!(m.version.is_some());
+
 		assert!(m.short_version.is_some());
 
 		#[cfg(not(target_os = "macos"))]
 		{
 			assert!(matches!(m.authors, Some(a) if !a.is_empty()));
+
 			assert!(m.comments.is_some());
+
 			assert!(m.license.is_some());
 			// Note: `m.website` is not tested because this package doesn't have
 			// the "website" field

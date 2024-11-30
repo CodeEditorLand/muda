@@ -16,28 +16,37 @@ impl Accelerator {
     // Convert a hotkey to an accelerator.
     pub fn to_accel(&self, menu_id: u16) -> crate::Result<ACCEL> {
         let mut virt_key = FVIRTKEY;
+
         let key_mods: Modifiers = self.mods;
+
         if key_mods.contains(Modifiers::CONTROL) {
             virt_key |= FCONTROL;
         }
+
         if key_mods.contains(Modifiers::ALT) {
             virt_key |= FALT;
         }
+
         if key_mods.contains(Modifiers::SHIFT) {
             virt_key |= FSHIFT;
         }
 
         let vk_code = key_to_vk(&self.key)?;
+
         let mod_code = vk_code >> 8;
+
         if mod_code & 0x1 != 0 {
             virt_key |= FSHIFT;
         }
+
         if mod_code & 0x02 != 0 {
             virt_key |= FCONTROL;
         }
+
         if mod_code & 0x04 != 0 {
             virt_key |= FALT;
         }
+
         let raw_key = vk_code & 0x00ff;
 
         Ok(ACCEL {
@@ -169,18 +178,23 @@ fn key_to_vk(key: &Code) -> Result<VIRTUAL_KEY, AcceleratorParseError> {
 impl fmt::Display for Accelerator {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let key_mods: Modifiers = self.mods;
+
         if key_mods.contains(Modifiers::CONTROL) {
             write!(f, "Ctrl+")?;
         }
+
         if key_mods.contains(Modifiers::SHIFT) {
             write!(f, "Shift+")?;
         }
+
         if key_mods.contains(Modifiers::ALT) {
             write!(f, "Alt+")?;
         }
+
         if key_mods.contains(Modifiers::SUPER) {
             write!(f, "Windows+")?;
         }
+
         match &self.key {
             Code::KeyA => write!(f, "A"),
             Code::KeyB => write!(f, "B"),

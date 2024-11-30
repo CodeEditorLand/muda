@@ -76,22 +76,28 @@ impl Drop for HBrush {
 
 fn background_brush() -> HBRUSH {
     const BACKGROUND_COLOR: u32 = 2829099;
+
     static mut BACKGROUND_BRUSH: Option<HBrush> = None;
+
     unsafe {
         if BACKGROUND_BRUSH.is_none() {
             BACKGROUND_BRUSH = Some(HBrush(CreateSolidBrush(BACKGROUND_COLOR)));
         }
+
         BACKGROUND_BRUSH.as_ref().unwrap().0
     }
 }
 
 fn selected_background_brush() -> HBRUSH {
     const SELECTED_BACKGROUND_COLOR: u32 = 4276545;
+
     static mut SELECTED_BACKGROUND_BRUSH: Option<HBrush> = None;
+
     unsafe {
         if SELECTED_BACKGROUND_BRUSH.is_none() {
             SELECTED_BACKGROUND_BRUSH = Some(HBrush(CreateSolidBrush(SELECTED_BACKGROUND_COLOR)));
         }
+
         SELECTED_BACKGROUND_BRUSH.as_ref().unwrap().0
     }
 }
@@ -106,11 +112,14 @@ pub fn draw(hwnd: super::Hwnd, msg: u32, _wparam: WPARAM, lparam: LPARAM) {
                 cbSize: std::mem::size_of::<MENUBARINFO>() as _,
                 ..unsafe { std::mem::zeroed() }
             };
+
             unsafe { GetMenuBarInfo(hwnd as _, OBJID_MENU, 0, &mut mbi) };
 
             let mut client_rc: RECT = unsafe { std::mem::zeroed() };
+
             unsafe {
                 GetClientRect(hwnd as _, &mut client_rc);
+
                 MapWindowPoints(
                     hwnd as _,
                     std::ptr::null_mut(),
@@ -120,17 +129,22 @@ pub fn draw(hwnd: super::Hwnd, msg: u32, _wparam: WPARAM, lparam: LPARAM) {
             };
 
             let mut window_rc: RECT = unsafe { std::mem::zeroed() };
+
             unsafe { GetWindowRect(hwnd as _, &mut window_rc) };
 
             unsafe { OffsetRect(&mut client_rc, -window_rc.left, -window_rc.top) };
 
             let mut annoying_rc = client_rc;
+
             annoying_rc.bottom = annoying_rc.top;
+
             annoying_rc.top -= 1;
 
             unsafe {
                 let hdc = GetWindowDC(hwnd as _);
+
                 FillRect(hdc, &annoying_rc, background_brush());
+
                 ReleaseDC(hwnd as _, hdc);
             }
         }
@@ -145,15 +159,19 @@ pub fn draw(hwnd: super::Hwnd, msg: u32, _wparam: WPARAM, lparam: LPARAM) {
                     cbSize: std::mem::size_of::<MENUBARINFO>() as _,
                     ..unsafe { std::mem::zeroed() }
                 };
+
                 unsafe { GetMenuBarInfo(hwnd as _, OBJID_MENU, 0, &mut mbi) };
 
                 let mut window_rc: RECT = unsafe { std::mem::zeroed() };
+
                 unsafe { GetWindowRect(hwnd as _, &mut window_rc) };
 
                 let mut rc = mbi.rcBar;
                 // the rcBar is offset by the window rect
                 unsafe { OffsetRect(&mut rc, -window_rc.left, -window_rc.top) };
+
                 rc.top -= 1;
+
                 rc
             };
 
@@ -167,11 +185,17 @@ pub fn draw(hwnd: super::Hwnd, msg: u32, _wparam: WPARAM, lparam: LPARAM) {
             // get the menu item string
             let (label, cch) = {
                 let mut label = Vec::<u16>::with_capacity(256);
+
                 let mut info: MENUITEMINFOW = unsafe { std::mem::zeroed() };
+
                 info.cbSize = std::mem::size_of::<MENUITEMINFOW>() as _;
+
                 info.fMask = MIIM_STRING;
+
                 info.dwTypeData = label.as_mut_ptr();
+
                 info.cch = (std::mem::size_of_val(&label) / 2 - 1) as _;
+
                 unsafe {
                     GetMenuItemInfoW(
                         (*pudmi).um.hmenu,
@@ -185,7 +209,9 @@ pub fn draw(hwnd: super::Hwnd, msg: u32, _wparam: WPARAM, lparam: LPARAM) {
 
             // get the item state for drawing
             let mut dw_flags = DT_CENTER | DT_SINGLELINE | DT_VCENTER;
+
             let mut i_text_state_id = 0;
+
             let mut i_background_state_id = 0;
 
             unsafe {
@@ -195,25 +221,33 @@ pub fn draw(hwnd: super::Hwnd, msg: u32, _wparam: WPARAM, lparam: LPARAM) {
                 {
                     // normal display
                     i_text_state_id = MPI_NORMAL;
+
                     i_background_state_id = MPI_NORMAL;
                 }
+
                 if (*pudmi).dis.itemState & ODS_HOTLIGHT != 0 {
                     // hot tracking
                     i_text_state_id = MPI_HOT;
+
                     i_background_state_id = MPI_HOT;
                 }
+
                 if (*pudmi).dis.itemState & ODS_SELECTED != 0 {
                     // clicked -- MENU_POPUPITEM has no state for this, though MENU_BARITEM does
                     i_text_state_id = MPI_HOT;
+
                     i_background_state_id = MPI_HOT;
                 }
+
                 if ((*pudmi).dis.itemState & ODS_GRAYED) != 0
                     || ((*pudmi).dis.itemState & ODS_DISABLED) != 0
                 {
                     // disabled / grey text
                     i_text_state_id = MPI_DISABLED;
+
                     i_background_state_id = MPI_DISABLED;
                 }
+
                 if ((*pudmi).dis.itemState & ODS_NOACCEL) != 0 {
                     dw_flags |= DT_HIDEPREFIX;
                 }
@@ -226,6 +260,7 @@ pub fn draw(hwnd: super::Hwnd, msg: u32, _wparam: WPARAM, lparam: LPARAM) {
                 FillRect((*pudmi).um.hdc, &(*pudmi).dis.rcItem, bg_brush);
 
                 const TEXT_COLOR: u32 = 16777215;
+
                 const DISABLED_TEXT_COLOR: u32 = 7171437;
 
                 let text_brush = match i_text_state_id {
@@ -234,7 +269,9 @@ pub fn draw(hwnd: super::Hwnd, msg: u32, _wparam: WPARAM, lparam: LPARAM) {
                 };
 
                 SetBkMode((*pudmi).um.hdc, 0);
+
                 SetTextColor((*pudmi).um.hdc, text_brush);
+
                 DrawTextW(
                     (*pudmi).um.hdc,
                     label.as_ptr(),
@@ -257,7 +294,9 @@ static HUXTHEME: Lazy<isize> = Lazy::new(|| unsafe { LoadLibraryA(s!("uxtheme.dl
 
 fn should_apps_use_dark_mode() -> bool {
     const UXTHEME_SHOULDAPPSUSEDARKMODE_ORDINAL: u16 = 132;
+
     type ShouldAppsUseDarkMode = unsafe extern "system" fn() -> bool;
+
     static SHOULD_APPS_USE_DARK_MODE: Lazy<Option<ShouldAppsUseDarkMode>> = Lazy::new(|| unsafe {
         if *HUXTHEME == 0 {
             return None;
@@ -277,7 +316,9 @@ fn should_apps_use_dark_mode() -> bool {
 
 fn is_dark_mode_allowed_for_window(hwnd: HWND) -> bool {
     const UXTHEME_ISDARKMODEALLOWEDFORWINDOW_ORDINAL: u16 = 137;
+
     type IsDarkModeAllowedForWindow = unsafe extern "system" fn(HWND) -> bool;
+
     static IS_DARK_MODE_ALLOWED_FOR_WINDOW: Lazy<Option<IsDarkModeAllowedForWindow>> =
         Lazy::new(|| unsafe {
             if *HUXTHEME == 0 {

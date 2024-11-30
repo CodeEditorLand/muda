@@ -95,14 +95,17 @@ fn modifiers_to_gdk_modifier_type(modifiers: Modifiers) -> gdk::ModifierType {
         gdk::ModifierType::MOD1_MASK,
         modifiers.contains(Modifiers::ALT),
     );
+
     result.set(
         gdk::ModifierType::CONTROL_MASK,
         modifiers.contains(Modifiers::CONTROL),
     );
+
     result.set(
         gdk::ModifierType::SHIFT_MASK,
         modifiers.contains(Modifiers::SHIFT),
     );
+
     result.set(
         gdk::ModifierType::META_MASK,
         modifiers.contains(Modifiers::SUPER),
@@ -113,6 +116,7 @@ fn modifiers_to_gdk_modifier_type(modifiers: Modifiers) -> gdk::ModifierType {
 
 fn key_to_raw_key(src: &Code) -> Option<gdk::keys::Key> {
     use gdk::keys::constants::*;
+
     Some(match src {
         Code::Escape => Escape,
         Code::Backspace => BackSpace,

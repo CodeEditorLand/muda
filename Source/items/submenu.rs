@@ -40,6 +40,7 @@ impl Submenu {
     ///   for this submenu. To display a `&` without assigning a mnemenonic, use `&&`.
     pub fn new<S: AsRef<str>>(text: S, enabled: bool) -> Self {
         let submenu = crate::platform_impl::MenuChild::new_submenu(text.as_ref(), enabled, None);
+
         Self {
             id: Rc::new(submenu.id().clone()),
             inner: Rc::new(RefCell::new(submenu)),
@@ -70,7 +71,9 @@ impl Submenu {
         items: &[&dyn IsMenuItem],
     ) -> crate::Result<Self> {
         let menu = Self::new(text, enabled);
+
         menu.append_items(items)?;
+
         Ok(menu)
     }
 
@@ -82,7 +85,9 @@ impl Submenu {
         items: &[&dyn IsMenuItem],
     ) -> crate::Result<Self> {
         let menu = Self::with_id(id, text, enabled);
+
         menu.append_items(items)?;
+
         Ok(menu)
     }
 
@@ -143,9 +148,12 @@ impl Submenu {
     /// Remove the menu item at the specified position from this submenu and returns it.
     pub fn remove_at(&self, position: usize) -> Option<MenuItemKind> {
         let mut items = self.items();
+
         if items.len() > position {
             let item = items.remove(position);
+
             let _ = self.remove(item.as_ref());
+
             Some(item)
         } else {
             None

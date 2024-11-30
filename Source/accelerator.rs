@@ -61,8 +61,10 @@ impl Accelerator {
     /// Only [`Modifiers::ALT`], [`Modifiers::SHIFT`], [`Modifiers::CONTROL`], and [`Modifiers::SUPER`]
     pub fn new(mods: Option<Modifiers>, key: Code) -> Self {
         let mut mods = mods.unwrap_or_else(Modifiers::empty);
+
         if mods.contains(Modifiers::META) {
             mods.remove(Modifiers::META);
+
             mods.insert(Modifiers::SUPER);
         }
 
@@ -73,22 +75,29 @@ impl Accelerator {
 
     fn generate_hash(mods: Modifiers, key: Code) -> u32 {
         let mut accelerator_str = String::new();
+
         if mods.contains(Modifiers::SHIFT) {
             accelerator_str.push_str("shift+")
         }
+
         if mods.contains(Modifiers::CONTROL) {
             accelerator_str.push_str("control+")
         }
+
         if mods.contains(Modifiers::ALT) {
             accelerator_str.push_str("alt+")
         }
+
         if mods.contains(Modifiers::SUPER) {
             accelerator_str.push_str("super+")
         }
+
         accelerator_str.push_str(&key.to_string());
 
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
+
         accelerator_str.hash(&mut hasher);
+
         std::hash::Hasher::finish(&hasher) as u32
     }
 
@@ -112,14 +121,18 @@ impl Accelerator {
     pub fn matches(&self, modifiers: impl Borrow<Modifiers>, key: impl Borrow<Code>) -> bool {
         // Should be a const but const bit_or doesn't work here.
         let base_mods = Modifiers::SHIFT | Modifiers::CONTROL | Modifiers::ALT | Modifiers::SUPER;
+
         let modifiers = modifiers.borrow();
+
         let key = key.borrow();
+
         self.mods == *modifiers & base_mods && self.key == *key
     }
 }
 
 impl FromStr for Accelerator {
     type Err = AcceleratorParseError;
+
     fn from_str(accelerator_string: &str) -> Result<Self, Self::Err> {
         parse_accelerator(accelerator_string)
     }
@@ -145,6 +158,7 @@ fn parse_accelerator(accelerator: &str) -> Result<Accelerator, AcceleratorParseE
     let tokens = accelerator.split('+').collect::<Vec<&str>>();
 
     let mut mods = Modifiers::empty();
+
     let mut key = None;
 
     match tokens.len() {
@@ -195,6 +209,7 @@ fn parse_accelerator(accelerator: &str) -> Result<Accelerator, AcceleratorParseE
                     "COMMANDORCONTROL" | "COMMANDORCTRL" | "CMDORCTRL" | "CMDORCONTROL" => {
                         mods |= Modifiers::CONTROL;
                     }
+
                     _ => {
                         key = Some(parse_key(token)?);
                     }
@@ -204,11 +219,13 @@ fn parse_accelerator(accelerator: &str) -> Result<Accelerator, AcceleratorParseE
     }
 
     let key = key.ok_or_else(|| AcceleratorParseError::InvalidFormat(accelerator.to_string()))?;
+
     Ok(Accelerator::new(Some(mods), key))
 }
 
 fn parse_key(key: &str) -> Result<Code, AcceleratorParseError> {
     use Code::*;
+
     match key.to_uppercase().as_str() {
         "BACKQUOTE" | "`" => Ok(Backquote),
         "BACKSLASH" | "\\" => Ok(Backslash),
@@ -330,8 +347,11 @@ fn test_parse_accelerator() {
     macro_rules! assert_parse_accelerator {
         ($key:literal, $lrh:expr) => {
             let r = parse_accelerator($key).unwrap();
+
             let l = $lrh;
+
             assert_eq!(r.mods, l.mods);
+
             assert_eq!(r.key, l.key);
         };
     }
@@ -380,6 +400,7 @@ fn test_parse_accelerator() {
             id: 0,
         }
     );
+
     assert_parse_accelerator!(
         "Digit5",
         Accelerator {
@@ -388,6 +409,7 @@ fn test_parse_accelerator() {
             id: 0,
         }
     );
+
     assert_parse_accelerator!(
         "KeyG",
         Accelerator {
@@ -422,13 +444,19 @@ fn test_parse_accelerator() {
 #[test]
 fn test_equality() {
     let h1 = parse_accelerator("Shift+KeyR").unwrap();
+
     let h2 = parse_accelerator("Shift+KeyR").unwrap();
+
     let h3 = Accelerator::new(Some(Modifiers::SHIFT), Code::KeyR);
+
     let h4 = parse_accelerator("Alt+KeyR").unwrap();
+
     let h5 = parse_accelerator("Alt+KeyR").unwrap();
+
     let h6 = parse_accelerator("KeyR").unwrap();
 
     assert!(h1 == h2 && h2 == h3 && h3 != h4 && h4 == h5 && h5 != h6);
+
     assert!(
         h1.id() == h2.id()
             && h2.id() == h3.id()

@@ -27,10 +27,13 @@ impl PlatformIcon {
         {
             let mut encoder =
                 png::Encoder::new(Cursor::new(&mut png), self.0.width as _, self.0.height as _);
+
             encoder.set_color(png::ColorType::Rgba);
+
             encoder.set_depth(png::BitDepth::Eight);
 
             let mut writer = encoder.write_header().unwrap();
+
             writer.write_image_data(&self.0.rgba).unwrap();
         }
 
@@ -39,11 +42,13 @@ impl PlatformIcon {
 
     pub fn to_nsimage(&self, fixed_height: Option<f64>) -> Retained<NSImage> {
         let (width, height) = self.get_size();
+
         let icon = self.to_png();
 
         let (icon_width, icon_height) = match fixed_height {
             Some(fixed_height) => {
                 let icon_height: CGFloat = fixed_height as CGFloat;
+
                 let icon_width: CGFloat = (width as CGFloat) / (height as CGFloat / icon_height);
 
                 (icon_width, icon_height)
@@ -55,7 +60,9 @@ impl PlatformIcon {
         let nsdata = NSData::with_bytes(&icon);
 
         let nsimage = NSImage::initWithData(NSImage::alloc(), &nsdata).unwrap();
+
         let new_size = NSSize::new(icon_width, icon_height);
+
         unsafe { nsimage.setSize(new_size) };
 
         nsimage

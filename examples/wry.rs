@@ -41,11 +41,15 @@ fn main() -> wry::Result<()> {
 	#[cfg(target_os = "windows")]
 	{
 		let menu_bar = menu_bar.clone();
+
 		event_loop_builder.with_msg_hook(move |msg| {
 			use windows_sys::Win32::UI::WindowsAndMessaging::{TranslateAcceleratorW, MSG};
+
 			unsafe {
 				let msg = msg as *const MSG;
+
 				let translated = TranslateAcceleratorW((*msg).hwnd, menu_bar.haccel() as _, msg);
+
 				translated == 1
 			}
 		});
@@ -60,7 +64,9 @@ fn main() -> wry::Result<()> {
 	#[cfg(target_os = "macos")]
 	{
 		let app_m = Submenu::new("App", true);
+
 		menu_bar.append(&app_m).unwrap();
+
 		app_m
 			.append_items(&[
 				&PredefinedMenuItem::about(None, None),
@@ -77,7 +83,9 @@ fn main() -> wry::Result<()> {
 	}
 
 	let file_m = Submenu::new("&File", true);
+
 	let edit_m = Submenu::new("&Edit", true);
+
 	let window_m = Submenu::new("&Window", true);
 
 	menu_bar.append_items(&[&file_m, &edit_m, &window_m]).unwrap();
@@ -86,7 +94,9 @@ fn main() -> wry::Result<()> {
 		MenuItem::new("C&ustom 1", true, Some(Accelerator::new(Some(Modifiers::ALT), Code::KeyC)));
 
 	let path = concat!(env!("CARGO_MANIFEST_DIR"), "/examples/icon.png");
+
 	let icon = load_icon(std::path::Path::new(path));
+
 	let image_item = IconMenuItem::new(
 		"Image custom 1",
 		true,
@@ -95,7 +105,9 @@ fn main() -> wry::Result<()> {
 	);
 
 	let check_custom_i_1 = CheckMenuItem::new("Check Custom 1", true, true, None);
+
 	let check_custom_i_2 = CheckMenuItem::new("Check Custom 2", false, true, None);
+
 	let check_custom_i_3 = CheckMenuItem::new(
 		"Check Custom 3",
 		true,
@@ -104,7 +116,9 @@ fn main() -> wry::Result<()> {
 	);
 
 	let copy_i = PredefinedMenuItem::copy(None);
+
 	let cut_i = PredefinedMenuItem::cut(None);
+
 	let paste_i = PredefinedMenuItem::paste(None);
 
 	file_m
@@ -153,6 +167,7 @@ fn main() -> wry::Result<()> {
 	#[cfg(target_os = "windows")]
 	unsafe {
 		menu_bar.init_for_hwnd(window.hwnd() as _).unwrap();
+
 		menu_bar.init_for_hwnd(window2.hwnd() as _).unwrap();
 	}
 	#[cfg(target_os = "linux")]
@@ -160,6 +175,7 @@ fn main() -> wry::Result<()> {
 		menu_bar
 			.init_for_gtk_window(window.gtk_window(), window.default_vbox())
 			.unwrap();
+
 		menu_bar
 			.init_for_gtk_window(window2.gtk_window(), window2.default_vbox())
 			.unwrap();
@@ -167,6 +183,7 @@ fn main() -> wry::Result<()> {
 	#[cfg(target_os = "macos")]
 	{
 		menu_bar.init_for_nsapp();
+
 		window_m.set_as_windows_menu_for_nsapp();
 	}
 
@@ -174,6 +191,7 @@ fn main() -> wry::Result<()> {
 	let condition = "e.button !== 2";
 	#[cfg(not(windows))]
 	let condition = "e.button == 2 && e.buttons === 0";
+
 	let html:String = format!(
 		r#"
     <html>
@@ -181,17 +199,23 @@ fn main() -> wry::Result<()> {
         <style>
             * {{
                 padding: 0;
+
                 margin: 0;
+
                 box-sizing: border-box;
+
                 font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
             }}
+
             main {{
                     width: 100vw;
+
                     height: 100vh;
             }}
             @media (prefers-color-scheme: dark) {{
                 main {{
                     color: #fff;
+
                     background: #2f2f2f;
                 }}
             }}
@@ -202,6 +226,7 @@ fn main() -> wry::Result<()> {
         <script>
             window.addEventListener('contextmenu', (e) => {{
                 e.preventDefault();
+
                 console.log(e)
                 // contextmenu was requested from keyboard
                 if ({condition}) {{
@@ -209,6 +234,7 @@ fn main() -> wry::Result<()> {
                 }}
             }})
             let x = true;
+
             window.addEventListener('mouseup', (e) => {{
                 if (e.button === 2) {{
                     if (x) {{
@@ -216,6 +242,7 @@ fn main() -> wry::Result<()> {
                     }} else {{
                         window.ipc.postMessage(`showContextMenu`);
                     }}
+
                     x = !x;
                 }}
             }})
@@ -226,14 +253,19 @@ fn main() -> wry::Result<()> {
 	);
 
 	let window = Rc::new(window);
+
 	let window2 = Rc::new(window2);
 
 	let create_ipc_handler = |window:&Rc<Window>| {
 		let window = window.clone();
+
 		let file_m_c = file_m.clone();
+
 		let menu_bar = menu_bar.clone();
+
 		move |req:Request<String>| {
 			let req = req.body();
+
 			if req == "showContextMenu" {
 				show_context_menu(&window, &file_m_c, None)
 			} else if let Some(rest) = req.strip_prefix("showContextMenuPos:") {
@@ -247,6 +279,7 @@ fn main() -> wry::Result<()> {
 					menu_bar.clone().gtk_menubar_for_gtk_window(window.gtk_window())
 				{
 					use gtk::prelude::*;
+
 					y += menu_bar.allocated_height();
 				}
 
@@ -266,6 +299,7 @@ fn main() -> wry::Result<()> {
 		.with_html(&html)
 		.with_ipc_handler(create_ipc_handler(&window))
 		.build()?;
+
 	let webview2 = create_webview(&window2)
 		.with_html(html)
 		.with_ipc_handler(create_ipc_handler(&window2))
@@ -285,8 +319,10 @@ fn main() -> wry::Result<()> {
 				custom_i_1
 					.set_accelerator(Some(Accelerator::new(Some(Modifiers::SHIFT), Code::KeyF)))
 					.unwrap();
+
 				file_m.insert(&MenuItem::new("New Menu Item", true, None), 2).unwrap();
 			}
+
 			println!("{event:?}");
 		}
 	})
@@ -309,9 +345,12 @@ fn show_context_menu(window:&Window, menu:&dyn ContextMenu, position:Option<Posi
 fn load_icon(path:&std::path::Path) -> muda::Icon {
 	let (icon_rgba, icon_width, icon_height) = {
 		let image = image::open(path).expect("Failed to open icon path").into_rgba8();
+
 		let (width, height) = image.dimensions();
+
 		let rgba = image.into_raw();
 		(rgba, width, height)
 	};
+
 	muda::Icon::from_rgba(icon_rgba, icon_width, icon_height).expect("Failed to open icon")
 }

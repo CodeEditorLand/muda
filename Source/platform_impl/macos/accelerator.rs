@@ -110,19 +110,25 @@ impl Accelerator {
     /// Return the modifiers of this hotkey, as an NSEventModifierFlags bitflag.
     pub fn key_modifier_mask(self) -> NSEventModifierFlags {
         let mods: Modifiers = self.mods;
+
         let mut flags = NSEventModifierFlags::empty();
+
         if mods.contains(Modifiers::SHIFT) {
             flags.insert(NSEventModifierFlags::NSEventModifierFlagShift);
         }
+
         if mods.contains(Modifiers::SUPER) {
             flags.insert(NSEventModifierFlags::NSEventModifierFlagCommand);
         }
+
         if mods.contains(Modifiers::ALT) {
             flags.insert(NSEventModifierFlags::NSEventModifierFlagOption);
         }
+
         if mods.contains(Modifiers::CONTROL) {
             flags.insert(NSEventModifierFlags::NSEventModifierFlagControl);
         }
+
         flags
     }
 }

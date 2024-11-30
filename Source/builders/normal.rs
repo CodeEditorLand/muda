@@ -19,6 +19,7 @@ impl MenuItemBuilder {
 	/// Set the id this menu item.
 	pub fn id(mut self, id:MenuId) -> Self {
 		self.id.replace(id);
+
 		self
 	}
 
@@ -27,12 +28,14 @@ impl MenuItemBuilder {
 	/// See [`MenuItem::set_text`] for more info.
 	pub fn text<S:Into<String>>(mut self, text:S) -> Self {
 		self.text = text.into();
+
 		self
 	}
 
 	/// Enable or disable this menu item.
 	pub fn enabled(mut self, enabled:bool) -> Self {
 		self.enabled = enabled;
+
 		self
 	}
 
@@ -44,6 +47,7 @@ impl MenuItemBuilder {
 	where
 		crate::Error: From<<A as TryInto<Accelerator>>::Error>, {
 		self.accelerator = accelerator.map(|a| a.try_into()).transpose()?;
+
 		Ok(self)
 	}
 

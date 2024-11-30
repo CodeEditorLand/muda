@@ -55,11 +55,17 @@ mod test {
 	#[test]
 	fn is_eq() {
 		assert_eq!(MenuId::new("t"), "t",);
+
 		assert_eq!(MenuId::new("t"), String::from("t"));
+
 		assert_eq!(MenuId::new("t"), &String::from("t"));
+
 		assert_eq!(MenuId::new("t"), MenuId::new("t"));
+
 		assert_eq!(MenuId::new("t"), &MenuId::new("t"));
+
 		assert_eq!(&MenuId::new("t"), &MenuId::new("t"));
+
 		assert_eq!(MenuId::new("t").as_ref(), "t");
 	}
 }

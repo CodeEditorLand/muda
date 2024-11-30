@@ -33,7 +33,9 @@ pub fn LOWORD(dword: u32) -> u16 {
 
 pub fn decode_wide(w_str: *mut u16) -> String {
     let len = unsafe { windows_sys::Win32::Globalization::lstrlenW(w_str) } as usize;
+
     let w_str_slice = unsafe { std::slice::from_raw_parts(w_str, len) };
+
     String::from_utf16_lossy(w_str_slice)
 }
 
@@ -85,10 +87,12 @@ pub fn get_instance_handle() -> windows_sys::Win32::Foundation::HMODULE {
 
 fn get_function_impl(library: &str, function: &str) -> FARPROC {
     let library = encode_wide(library);
+
     assert_eq!(function.chars().last(), Some('\0'));
 
     // Library names we will use are ASCII so we can use the A version to avoid string conversion.
     let module = unsafe { LoadLibraryW(library.as_ptr()) };
+
     if module.is_null() {
         return None;
     }
@@ -136,11 +140,13 @@ pub unsafe fn hwnd_dpi(hwnd: HWND) -> u32 {
     } else if let Some(GetDpiForMonitor) = *GET_DPI_FOR_MONITOR {
         // We are on Windows 8.1 or later.
         let monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+
         if monitor.is_null() {
             return BASE_DPI;
         }
 
         let mut dpi_x = 0;
+
         let mut dpi_y = 0;
         #[allow(clippy::unnecessary_cast)]
         if GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &mut dpi_x, &mut dpi_y) == S_OK {
@@ -150,6 +156,7 @@ pub unsafe fn hwnd_dpi(hwnd: HWND) -> u32 {
         }
     } else {
         let hdc = GetDC(hwnd);
+
         if hdc.is_null() {
             return BASE_DPI;
         }

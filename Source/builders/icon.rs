@@ -26,6 +26,7 @@ impl IconMenuItemBuilder {
 	/// Set the id this icon menu item.
 	pub fn id(mut self, id:MenuId) -> Self {
 		self.id.replace(id);
+
 		self
 	}
 
@@ -34,26 +35,32 @@ impl IconMenuItemBuilder {
 	/// See [`IconMenuItem::set_text`] for more info.
 	pub fn text<S:Into<String>>(mut self, text:S) -> Self {
 		self.text = text.into();
+
 		self
 	}
 
 	/// Enable or disable this menu item.
 	pub fn enabled(mut self, enabled:bool) -> Self {
 		self.enabled = enabled;
+
 		self
 	}
 
 	/// Set this icon menu item icon.
 	pub fn icon(mut self, icon:Option<Icon>) -> Self {
 		self.icon = icon;
+
 		self.native_icon = None;
+
 		self
 	}
 
 	/// Set this icon menu item native icon.
 	pub fn native_icon(mut self, icon:Option<NativeIcon>) -> Self {
 		self.native_icon = icon;
+
 		self.icon = None;
+
 		self
 	}
 
@@ -65,6 +72,7 @@ impl IconMenuItemBuilder {
 	where
 		crate::Error: From<<A as TryInto<Accelerator>>::Error>, {
 		self.accelerator = accelerator.map(|a| a.try_into()).transpose()?;
+
 		Ok(self)
 	}
 

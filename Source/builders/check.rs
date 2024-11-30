@@ -20,6 +20,7 @@ impl CheckMenuItemBuilder {
 	/// Set the id this check menu item.
 	pub fn id(mut self, id:MenuId) -> Self {
 		self.id.replace(id);
+
 		self
 	}
 
@@ -28,18 +29,21 @@ impl CheckMenuItemBuilder {
 	/// See [`CheckMenuItem::set_text`] for more info.
 	pub fn text<S:Into<String>>(mut self, text:S) -> Self {
 		self.text = text.into();
+
 		self
 	}
 
 	/// Enable or disable this menu item.
 	pub fn enabled(mut self, enabled:bool) -> Self {
 		self.enabled = enabled;
+
 		self
 	}
 
 	/// Check or uncheck this menu item.
 	pub fn checked(mut self, checked:bool) -> Self {
 		self.checked = checked;
+
 		self
 	}
 
@@ -51,6 +55,7 @@ impl CheckMenuItemBuilder {
 	where
 		crate::Error: From<<A as TryInto<Accelerator>>::Error>, {
 		self.accelerator = accelerator.map(|a| a.try_into()).transpose()?;
+
 		Ok(self)
 	}
 

@@ -29,6 +29,7 @@ impl MenuItem {
 	///   without assigning a mnemenonic, use `&&`.
 	pub fn new<S:AsRef<str>>(text:S, enabled:bool, accelerator:Option<Accelerator>) -> Self {
 		let item = crate::platform_impl::MenuChild::new(text.as_ref(), enabled, accelerator, None);
+
 		Self { id:Rc::new(item.id().clone()), inner:Rc::new(RefCell::new(item)) }
 	}
 
@@ -44,6 +45,7 @@ impl MenuItem {
 		accelerator:Option<Accelerator>,
 	) -> Self {
 		let id = id.into();
+
 		Self {
 			id:Rc::new(id.clone()),
 			inner:Rc::new(RefCell::new(crate::platform_impl::MenuChild::new(

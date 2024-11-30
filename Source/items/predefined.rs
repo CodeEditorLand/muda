@@ -176,6 +176,7 @@ impl PredefinedMenuItem {
 			item,
 			text.map(|t| t.as_ref().to_string()),
 		);
+
 		Self { id:Rc::new(item.id().clone()), inner:Rc::new(RefCell::new(item)) }
 	}
 
