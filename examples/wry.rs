@@ -33,20 +33,42 @@ use tao::{
 use wry::WebViewBuilderExtUnix;
 use wry::{http::Request, WebViewBuilder};
 
+enum UserEvent {
+    MenuEvent(muda::MenuEvent),
+}
+
 fn main() -> wry::Result<()> {
-	let mut event_loop_builder = EventLoopBuilder::new();
+    let mut event_loop_builder = EventLoopBuilder::<UserEvent>::with_user_event();
 
 	let menu_bar = Menu::new();
 
-	#[cfg(target_os = "windows")]
-	{
-		let menu_bar = menu_bar.clone();
+    // setup accelerator handler on Windows
+    #[cfg(target_os = "windows")]
+    {
+        let menu_bar = menu_bar.clone();
+        event_loop_builder.with_msg_hook(move |msg| {
+            use windows_sys::Win32::UI::WindowsAndMessaging::{TranslateAcceleratorW, MSG};
+            unsafe {
+                let msg = msg as *const MSG;
+                let translated = TranslateAcceleratorW((*msg).hwnd, menu_bar.haccel() as _, msg);
+                translated == 1
+            }
+        });
+    }
 
 		event_loop_builder.with_msg_hook(move |msg| {
 			use windows_sys::Win32::UI::WindowsAndMessaging::{TranslateAcceleratorW, MSG};
 
-			unsafe {
-				let msg = msg as *const MSG;
+    // set a menu event handler that wakes up the event loop
+    let proxy = event_loop.create_proxy();
+    muda::MenuEvent::set_event_handler(Some(move |event| {
+        proxy.send_event(UserEvent::MenuEvent(event));
+    }));
+
+    let window = WindowBuilder::new()
+        .with_title("Window 1")
+        .build(&event_loop)
+        .unwrap();
 
 				let translated = TranslateAcceleratorW((*msg).hwnd, menu_bar.haccel() as _, msg);
 
@@ -280,52 +302,21 @@ fn main() -> wry::Result<()> {
 				{
 					use gtk::prelude::*;
 
-					y += menu_bar.allocated_height();
-				}
+        match event {
+            Event::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            } => *control_flow = ControlFlow::Exit,
 
-				show_context_menu(&window, &file_m_c, Some(Position::Logical((x, y).into())))
-			}
-		}
-	};
-
-	fn create_webview(window:&Rc<Window>) -> WebViewBuilder<'_> {
-		#[cfg(not(target_os = "linux"))]
-		return WebViewBuilder::new(window);
-		#[cfg(target_os = "linux")]
-		WebViewBuilder::new_gtk(window.default_vbox().unwrap())
-	};
-
-	let webview = create_webview(&window)
-		.with_html(&html)
-		.with_ipc_handler(create_ipc_handler(&window))
-		.build()?;
-
-	let webview2 = create_webview(&window2)
-		.with_html(html)
-		.with_ipc_handler(create_ipc_handler(&window2))
-		.build()?;
-
-	let menu_channel = MenuEvent::receiver();
-
-	event_loop.run(move |event, _, control_flow| {
-		*control_flow = ControlFlow::Wait;
-
-		if let Event::WindowEvent { event: WindowEvent::CloseRequested, .. } = event {
-			*control_flow = ControlFlow::Exit;
-		}
-
-		if let Ok(event) = menu_channel.try_recv() {
-			if event.id == custom_i_1.id() {
-				custom_i_1
-					.set_accelerator(Some(Accelerator::new(Some(Modifiers::SHIFT), Code::KeyF)))
-					.unwrap();
-
-				file_m.insert(&MenuItem::new("New Menu Item", true, None), 2).unwrap();
-			}
-
-			println!("{event:?}");
-		}
-	})
+            Event::UserEvent(UserEvent::MenuEvent(event)) => {
+                if event.id == custom_i_1.id() {
+                    file_m.insert(&MenuItem::new("New Menu Item", true, None), 2);
+                }
+                println!("{event:?}");
+            }
+            _ => {}
+        }
+    })
 }
 
 fn show_context_menu(window:&Window, menu:&dyn ContextMenu, position:Option<Position>) {
