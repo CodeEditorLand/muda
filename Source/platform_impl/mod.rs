@@ -18,7 +18,7 @@ use std::{
 };
 
 pub(crate) use self::platform::*;
-use crate::{items::*, IsMenuItem, MenuItemKind, MenuItemType};
+use crate::{IsMenuItem, MenuItemKind, MenuItemType, items::*};
 
 impl dyn IsMenuItem + '_ {
 	fn child(&self) -> Rc<RefCell<MenuChild>> {

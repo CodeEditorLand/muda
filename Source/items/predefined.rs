@@ -7,12 +7,12 @@ use std::{cell::RefCell, mem, rc::Rc};
 use keyboard_types::{Code, Modifiers};
 
 use crate::{
-	accelerator::{Accelerator, CMD_OR_CTRL},
-	sealed::IsMenuItemBase,
 	AboutMetadata,
 	IsMenuItem,
 	MenuId,
 	MenuItemKind,
+	accelerator::{Accelerator, CMD_OR_CTRL},
+	sealed::IsMenuItemBase,
 };
 
 /// A predefined (native) menu item which has a predfined behavior by the OS or

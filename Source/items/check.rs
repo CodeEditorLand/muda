@@ -4,7 +4,7 @@
 
 use std::{cell::RefCell, mem, rc::Rc};
 
-use crate::{accelerator::Accelerator, sealed::IsMenuItemBase, IsMenuItem, MenuId, MenuItemKind};
+use crate::{IsMenuItem, MenuId, MenuItemKind, accelerator::Accelerator, sealed::IsMenuItemBase};
 
 /// A check menu item inside a [`Menu`] or [`Submenu`]
 /// and usually contains a text and a check mark or a similar toggle

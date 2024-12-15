@@ -5,12 +5,12 @@
 use std::{cell::RefCell, mem, rc::Rc};
 
 use crate::{
-	accelerator::Accelerator,
-	icon::{Icon, NativeIcon},
-	sealed::IsMenuItemBase,
 	IsMenuItem,
 	MenuId,
 	MenuItemKind,
+	accelerator::Accelerator,
+	icon::{Icon, NativeIcon},
+	sealed::IsMenuItemBase,
 };
 
 /// An icon menu item inside a [`Menu`] or [`Submenu`]

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: MIT
 
-use crate::{accelerator::Accelerator, MenuId, MenuItem};
+use crate::{MenuId, MenuItem, accelerator::Accelerator};
 
 /// A builder type for [`MenuItem`]
 #[derive(Clone, Debug, Default)]
